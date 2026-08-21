@@ -45,9 +45,9 @@
 
 **手机第三方 App 观看**
 
-![手机 App 观看 1](docs/screenshots/mobile-1.png)
+![手机 App 观看 1](docs/screenshots/mobile-1.jpeg)
 
-![手机 App 观看 2](docs/screenshots/mobile-2.png)
+![手机 App 观看 2](docs/screenshots/mobile-2.jpeg)
 
 **PC 第三方软件观看**
 

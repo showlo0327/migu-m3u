@@ -146,6 +146,24 @@ class MiguClient:
             )
         return [r for r in result if r["name"] and r["pID"]]
 
+    async def fetch_programs(self, pID: str, date: str) -> list[dict]:
+        """获取某频道某天的节目单（EPG），返回节目起止时间与回看 contId。"""
+        url = f"https://program-sc.miguvideo.com/live/v2/tv-programs-data/{pID}/{date}"
+        data = (await self._client.get(url)).json()
+        progs: list[dict] = []
+        for day in (data.get("body") or {}).get("program", []):
+            for p in day.get("content", []):
+                progs.append(
+                    {
+                        "name": p.get("contName") or "",
+                        "start": p.get("startTime") or 0,
+                        "end": p.get("endTime") or 0,
+                        "contId": p.get("contId") or "",
+                        "lookback": str(p.get("isLookBack") or "0") == "1",
+                    }
+                )
+        return [p for p in progs if p["name"] and p["start"] and p["end"]]
+
     async def resolve_playurl(self, pid: str, rate_type: int = 3, h265: bool = False) -> str:
         """解析频道 pID 的免登录播放地址（已带 ddCalcu 加密参数）。"""
         url, headers = build_playurl_request(pid, rate_type=rate_type, h265=h265)

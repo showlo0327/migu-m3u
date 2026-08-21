@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import datetime
 import json
 import logging
 import os
@@ -11,7 +12,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, PlainTextResponse, RedirectResponse
+from fastapi.responses import FileResponse, PlainTextResponse, RedirectResponse, Response
 from pydantic import BaseModel
 
 from .login import LoginManager
@@ -50,6 +51,10 @@ SETTINGS = {
     "max_workers": int(os.getenv("MIGU_MAX_WORKERS", "6")),
     "channels_file": os.getenv("MIGU_CHANNELS_FILE", "/data/channels.json"),
     "login_file": os.getenv("MIGU_LOGIN_FILE", "/data/login.json"),
+    "epg_back_days": int(os.getenv("MIGU_EPG_BACK_DAYS", "2")),
+    "epg_forward_days": int(os.getenv("MIGU_EPG_FORWARD_DAYS", "1")),
+    "epg_refresh_hours": int(os.getenv("MIGU_EPG_REFRESH_HOURS", "6")),
+    "epg_file": os.getenv("MIGU_EPG_FILE", "/data/epg.json"),
 }
 
 
@@ -63,6 +68,12 @@ class ServiceState:
         self.last_channel_refresh: float = 0.0
         self.last_error: str = ""
         self.refreshing = False
+        self.epg: dict[str, list[dict]] = {}
+        self.epg_last_refresh: float = 0.0
+        self.epg_refreshing = False
+        self._xml_cache = ""
+        self._xml_cache_ts = 0.0
+        self._load_epg()
 
     async def close(self) -> None:
         await self.migu.close()
@@ -197,18 +208,124 @@ class ServiceState:
         finally:
             self.refreshing = False
 
+    # ---- 节目单（EPG）与回看 ----
+    async def refresh_epg(self, force: bool = False) -> None:
+        now = time.time()
+        if self.epg_refreshing:
+            return
+        if (
+            not force
+            and self.epg
+            and now - self.epg_last_refresh < SETTINGS["epg_refresh_hours"] * 3600
+        ):
+            return
+        self.epg_refreshing = True
+        try:
+            today = datetime.date.today()
+            dates = [
+                (today - datetime.timedelta(days=i)).strftime("%Y%m%d")
+                for i in range(SETTINGS["epg_back_days"], -1, -1)
+            ] + [
+                (today + datetime.timedelta(days=i)).strftime("%Y%m%d")
+                for i in range(1, SETTINGS["epg_forward_days"] + 1)
+            ]
+            sem = asyncio.Semaphore(SETTINGS["max_workers"])
+
+            async def fetch_one(ch: ChannelState) -> list[dict]:
+                async with sem:
+                    items: list[dict] = []
+                    for d in dates:
+                        try:
+                            items += await self.migu.fetch_programs(ch.pID, d)
+                        except Exception:
+                            pass
+                    return items
+
+            results = await asyncio.gather(*[fetch_one(c) for c in self.channels])
+            epg = {}
+            for ch, items in zip(self.channels, results):
+                if items:
+                    epg[ch.name] = sorted(items, key=lambda p: p["start"])
+            async with self.lock:
+                self.epg = epg
+                self.epg_last_refresh = time.time()
+            self._save_epg()
+            total = sum(len(v) for v in epg.values())
+            log.info("节目单更新完成: %d 个频道 %d 条节目", len(epg), total)
+        except Exception as e:
+            log.error("节目单更新失败: %s", e)
+            if not self.epg:
+                self._load_epg()
+        finally:
+            self.epg_refreshing = False
+
+    def _save_epg(self) -> None:
+        try:
+            Path(SETTINGS["epg_file"]).parent.mkdir(parents=True, exist_ok=True)
+            Path(SETTINGS["epg_file"]).write_text(
+                json.dumps(self.epg, ensure_ascii=False), encoding="utf-8"
+            )
+        except Exception as e:
+            log.warning("保存节目单文件失败: %s", e)
+
+    def _load_epg(self) -> None:
+        try:
+            p = Path(SETTINGS["epg_file"])
+            if p.exists():
+                self.epg = json.loads(p.read_text(encoding="utf-8"))
+                log.info("从本地文件加载节目单: %d 个频道", len(self.epg))
+        except Exception as e:
+            log.warning("读取节目单文件失败: %s", e)
+
+    def build_xmltv(self) -> str:
+        if self._xml_cache and time.time() - self._xml_cache_ts < 300:
+            return self._xml_cache
+        tz = datetime.timezone(datetime.timedelta(hours=8))
+
+        def esc(s: str) -> str:
+            return (
+                str(s)
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace('"', "&quot;")
+            )
+
+        def fmt(ms: int) -> str:
+            return datetime.datetime.fromtimestamp(ms / 1000, tz=tz).strftime("%Y%m%d%H%M%S") + " +0800"
+
+        lines = ['<?xml version="1.0" encoding="UTF-8"?>', '<tv generator-info-name="migu-m3u">']
+        for name in self.epg:
+            lines.append(f'  <channel id="{esc(name)}"><display-name>{esc(name)}</display-name></channel>')
+        for name, progs in self.epg.items():
+            for p in progs:
+                lines.append(
+                    f'  <programme start="{fmt(p["start"])}" stop="{fmt(p["end"])}" channel="{esc(name)}">'
+                    f'<title>{esc(p["name"])}</title></programme>'
+                )
+        lines.append("</tv>")
+        self._xml_cache = "\n".join(lines)
+        self._xml_cache_ts = time.time()
+        return self._xml_cache
+
     async def background_loop(self) -> None:
         while True:
             try:
                 await self.load_channels()
                 await self.refresh_urls()
+                await self.refresh_epg()
             except Exception as e:
                 log.error("刷新任务异常: %s", e)
             await asyncio.sleep(SETTINGS["refresh_minutes"] * 60)
 
     # ---- M3U ----
     def build_m3u(self, base_url: str, direct: bool) -> str:
-        lines = ["#EXTM3U"]
+        lines = [
+            f'#EXTM3U x-tvg-url="{base_url}/playback.xml" '
+            'catchup="append" '
+            'catchup-source="?playbackbegin=${(b)yyyyMMddHHmmss}&playbackend=${(e)yyyyMMddHHmmss}" '
+            'catchup-days="3"',
+        ]
         for ch in self.channels:
             if not ch.url:
                 continue
@@ -273,6 +390,8 @@ async def status():
         "last_channel_refresh": state.last_channel_refresh or None,
         "cache_age": int(now - state.last_refresh) if state.last_refresh else None,
         "last_error": state.last_error or None,
+        "epg_channels": len(state.epg),
+        "epg_last_refresh": state.epg_last_refresh or None,
         "streams": [
             {"name": c.name, "pID": c.pID, "group": c.group, "ok": bool(c.url), "error": c.error or None}
             for c in state.channels
@@ -303,7 +422,7 @@ async def migu_direct_m3u(request: Request):
 
 
 @app.get("/play/{pid}")
-async def play(pid: str):
+async def play(pid: str, playbackbegin: str | None = None, playbackend: str | None = None):
     if not any(c.pID == pid for c in state.channels):
         raise HTTPException(404, f"未知频道 ID: {pid}")
     try:
@@ -311,12 +430,30 @@ async def play(pid: str):
     except Exception as e:
         log.error("频道 %s 解析失败: %s", pid, e)
         raise HTTPException(502, f"播放地址解析失败: {e}")
+    if playbackbegin or playbackend:
+        extra = []
+        if playbackbegin:
+            extra.append("playbackbegin=" + playbackbegin)
+        if playbackend:
+            extra.append("playbackend=" + playbackend)
+        url += "&" + "&".join(extra)
     return RedirectResponse(url, status_code=302)
+
+
+@app.get("/playback.xml")
+@app.get("/epg.xml")
+async def playback_xml():
+    if not state.epg and not state.epg_refreshing:
+        await state.refresh_epg(force=True)
+    if not state.epg:
+        raise HTTPException(503, "节目单尚未生成，请稍后重试")
+    return Response(content=state.build_xmltv(), media_type="application/xml; charset=utf-8")
 
 
 @app.get("/refresh")
 async def refresh():
     asyncio.create_task(state.refresh_urls())
+    asyncio.create_task(state.refresh_epg())
     return {"status": "refreshing"}
 
 

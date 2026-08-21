@@ -18,6 +18,10 @@ services:
       # 播放地址缓存与刷新频率（分钟）
       - MIGU_URL_CACHE_MINUTES=180
       - MIGU_REFRESH_MINUTES=60
+      # 节目单（EPG）：往前/往后各拉几天，用于回看与频道节目信息
+      # - MIGU_EPG_BACK_DAYS=2
+      # - MIGU_EPG_FORWARD_DAYS=1
+      # - MIGU_EPG_REFRESH_HOURS=6
     volumes:
       # 频道列表与扫码登录信息持久化（重启不丢失）
       - ./data:/data

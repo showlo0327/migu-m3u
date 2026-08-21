@@ -22,6 +22,8 @@ services:
       # - MIGU_EPG_BACK_DAYS=2
       # - MIGU_EPG_FORWARD_DAYS=1
       # - MIGU_EPG_REFRESH_HOURS=6
+      # 面板管理密码（分享链接管理用，务必修改默认值）
+      - MIGU_ADMIN_PASSWORD=admin
     volumes:
       # 频道列表与扫码登录信息持久化（重启不丢失）
       - ./data:/data

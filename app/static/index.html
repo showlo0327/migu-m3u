@@ -6,41 +6,45 @@
 <title>migu-m3u 管理面板</title>
 <style>
   :root {
-    --bg: #0d1117;
-    --card: #161b22;
-    --card2: #1c2330;
-    --border: #2a3242;
-    --text: #e6edf3;
-    --muted: #8b98a9;
-    --accent: #ff4d4f;
-    --accent2: #e63946;
-    --green: #3fb950;
-    --yellow: #d29922;
-    --red: #f85149;
-    --radius: 14px;
+    --bg: #0b0f17;
+    --card: #121826;
+    --card2: #1a2233;
+    --border: #243049;
+    --text: #e8eef7;
+    --muted: #8b9bb4;
+    --accent: #ff5c5f;
+    --accent2: #d92638;
+    --green: #3ecf6e;
+    --yellow: #e8b339;
+    --red: #ff5c5f;
+    --radius: 16px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    background: radial-gradient(1200px 600px at 20% -10%, #231522 0%, var(--bg) 55%);
+    background:
+      radial-gradient(900px 420px at 15% -8%, #261520 0%, transparent 60%),
+      radial-gradient(900px 420px at 90% -10%, #12233a 0%, transparent 55%),
+      var(--bg);
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
     min-height: 100vh;
-    padding: 28px 18px 60px;
+    padding: 26px 18px 60px;
   }
-  .wrap { max-width: 1080px; margin: 0 auto; }
+  .wrap { max-width: 1100px; margin: 0 auto; }
   header {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    margin-bottom: 24px; flex-wrap: wrap;
+    margin-bottom: 20px; flex-wrap: wrap;
   }
-  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo { display: flex; align-items: center; gap: 13px; }
   .logo .dot {
-    width: 40px; height: 40px; border-radius: 12px; flex: none;
-    background: linear-gradient(135deg, #ff4d4f, #b3202b);
+    width: 44px; height: 44px; border-radius: 14px; flex: none;
+    background: linear-gradient(135deg, var(--accent), #8f1420);
     display: flex; align-items: center; justify-content: center;
-    font-weight: 800; font-size: 20px; color: #fff; box-shadow: 0 6px 18px rgba(230,57,70,.35);
+    font-weight: 800; font-size: 21px; color: #fff;
+    box-shadow: 0 8px 22px rgba(217,38,56,.35);
   }
-  h1 { font-size: 20px; font-weight: 700; }
-  .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  h1 { font-size: 20px; font-weight: 700; letter-spacing: .2px; }
+  .sub { color: var(--muted); font-size: 12.5px; margin-top: 3px; }
   .badge {
     display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px;
     border-radius: 999px; font-size: 13px; border: 1px solid var(--border); background: var(--card);
@@ -48,50 +52,73 @@
   .badge .p { width: 8px; height: 8px; border-radius: 50%; }
   .badge.on  .p { background: var(--green); box-shadow: 0 0 8px var(--green); }
   .badge.off .p { background: var(--muted); }
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .card {
-    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 20px; margin-bottom: 16px;
+    background: linear-gradient(180deg, rgba(255,255,255,.02), transparent 30%), var(--card);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 22px; margin-bottom: 16px;
   }
-  .card h2 { font-size: 15px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
-  .card h2 .ic { color: var(--accent); }
+  .card h2 {
+    font-size: 15px; font-weight: 600; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 9px;
+  }
+  .card h2 .ic {
+    width: 26px; height: 26px; border-radius: 8px; flex: none;
+    background: rgba(255,92,95,.12); color: var(--accent);
+    display: inline-flex; align-items: center; justify-content: center; font-size: 13px;
+  }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .full { grid-column: 1 / -1; }
   .muted { color: var(--muted); font-size: 12.5px; }
   .row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
   .urlbox {
-    flex: 1; min-width: 260px; background: var(--card2); border: 1px solid var(--border);
-    border-radius: 10px; padding: 10px 12px; font-size: 13px; color: var(--text);
+    flex: 1; min-width: 240px; background: var(--card2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 12px; font-size: 12.5px; color: var(--text);
     word-break: break-all; font-family: ui-monospace, Consolas, monospace;
   }
   .btn {
     appearance: none; border: 1px solid var(--border); background: var(--card2); color: var(--text);
-    border-radius: 10px; padding: 9px 16px; font-size: 13px; cursor: pointer; transition: .15s;
+    border-radius: 10px; padding: 9px 15px; font-size: 13px; cursor: pointer; transition: .15s;
   }
   .btn:hover { border-color: var(--accent); color: #fff; }
-  .btn.primary { background: linear-gradient(135deg, var(--accent2), #b3202b); border: none; font-weight: 600; }
-  .btn.primary:hover { filter: brightness(1.12); }
+  .btn.primary { background: linear-gradient(135deg, var(--accent2), #8f1420); border: none; font-weight: 600; }
+  .btn.primary:hover { filter: brightness(1.15); }
   .btn.danger:hover { border-color: var(--red); color: var(--red); }
+  .btn.small { padding: 6px 11px; font-size: 12px; border-radius: 8px; }
   .btn:disabled { opacity: .5; cursor: not-allowed; }
-  .qrcode-area {
-    display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  .topcard { display: grid; grid-template-columns: 1.15fr .85fr; gap: 26px; }
+  .topcard .col { min-width: 0; }
+  .divider { width: 1px; background: var(--border); }
+  .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stat {
+    background: var(--card2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 13px; display: flex; flex-direction: column; gap: 3px;
   }
+  .stat b { font-size: 20px; }
+  .stat span { font-size: 12px; color: var(--muted); }
+  .stat.ok b { color: var(--green); }
+  .stat.mode b { color: var(--accent); }
+  .links { display: flex; gap: 8px; flex-wrap: wrap; }
+  .links a { color: var(--accent); text-decoration: none; font-size: 12.5px; }
+  .links a:hover { text-decoration: underline; }
+  .qrcode-area { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
   .qr-box {
-    width: 210px; height: 210px; border-radius: 14px; background: #fff; padding: 10px;
+    width: 200px; height: 200px; border-radius: 14px; background: #fff; padding: 10px;
     display: flex; align-items: center; justify-content: center; position: relative; flex: none;
   }
   .qr-box img { width: 100%; height: 100%; object-fit: contain; border-radius: 8px; }
-  .qr-tip { text-align: center; font-size: 13px; margin-top: 8px; }
+  .qr-tip { text-align: center; font-size: 12.5px; margin-top: 8px; color: var(--muted); }
   .login-form { flex: 1; min-width: 240px; }
   .login-form .field { margin-bottom: 12px; }
   .login-form label { display: block; font-size: 12.5px; color: var(--muted); margin-bottom: 6px; }
-  select, input[type=text] {
+  select, input[type=text], input[type=password] {
     width: 100%; background: var(--card2); border: 1px solid var(--border); color: var(--text);
     border-radius: 10px; padding: 10px 12px; font-size: 13.5px;
   }
+  input:focus, select:focus { outline: none; border-color: var(--accent); }
   .switch { display: flex; align-items: center; gap: 10px; cursor: pointer; }
   .switch input { display: none; }
   .switch .track {
-    width: 40px; height: 22px; border-radius: 999px; background: #30363d; position: relative; transition: .2s;
+    width: 40px; height: 22px; border-radius: 999px; background: #2a3448; position: relative; transition: .2s;
   }
   .switch .track::after {
     content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px;
@@ -99,37 +126,37 @@
   }
   .switch input:checked + .track { background: var(--accent); }
   .switch input:checked + .track::after { left: 21px; }
-  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-  .stat { background: var(--card2); border: 1px solid var(--border); border-radius: 12px; padding: 12px; text-align: center; }
-  .stat b { display: block; font-size: 22px; margin-bottom: 2px; }
-  .stat span { font-size: 12px; color: var(--muted); }
-  .stat.ok b { color: var(--green); }
-  .stat.mode b { color: var(--accent); }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th { text-align: left; color: var(--muted); font-weight: 500; padding: 8px 10px; border-bottom: 1px solid var(--border); }
-  td { padding: 8px 10px; border-bottom: 1px solid #20262f; }
+  td { padding: 8px 10px; border-bottom: 1px solid #1d2637; vertical-align: middle; }
   tr:hover td { background: rgba(255,255,255,.02); }
-  .tag {
-    display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px;
-  }
-  .tag.yes { background: rgba(63,185,80,.15); color: var(--green); }
-  .tag.no { background: rgba(248,81,73,.13); color: var(--red); }
+  .tag { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; }
+  .tag.yes { background: rgba(62,207,110,.13); color: var(--green); }
+  .tag.no { background: rgba(255,92,95,.12); color: var(--red); }
+  .tag.warn { background: rgba(232,179,57,.14); color: var(--yellow); }
   .search { width: 100%; margin-bottom: 12px; }
   .table-wrap { max-height: 480px; overflow: auto; border: 1px solid var(--border); border-radius: 12px; }
   .toast {
     position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
-    background: #1c2330; border: 1px solid var(--border); color: var(--text);
+    background: #1c2436; border: 1px solid var(--border); color: var(--text);
     padding: 12px 20px; border-radius: 12px; font-size: 13.5px; opacity: 0; pointer-events: none;
-    transition: .25s; z-index: 99; max-width: 80vw; box-shadow: 0 10px 30px rgba(0,0,0,.4);
+    transition: .25s; z-index: 99; max-width: 82vw; box-shadow: 0 12px 34px rgba(0,0,0,.45);
   }
   .toast.show { opacity: 1; }
   .toast.err { border-color: var(--red); }
-  .links { display: flex; gap: 8px; flex-wrap: wrap; }
-  .links a { color: var(--accent); text-decoration: none; font-size: 12.5px; }
-  .links a:hover { text-decoration: underline; }
+  .share-item {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    background: var(--card2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px 14px; margin-bottom: 10px;
+  }
+  .share-item .info { flex: 1; min-width: 200px; }
+  .share-item .info b { font-size: 13.5px; }
+  .share-item .info div { font-size: 12px; color: var(--muted); margin-top: 3px; word-break: break-all; }
   .hidden { display: none !important; }
-  @media (max-width: 760px) {
+  @media (max-width: 860px) {
     .grid { grid-template-columns: 1fr; }
+    .topcard { grid-template-columns: 1fr; }
+    .divider { display: none; }
     .stats { grid-template-columns: repeat(2, 1fr); }
   }
 </style>
@@ -141,7 +168,7 @@
       <div class="dot">M</div>
       <div>
         <h1>migu-m3u 管理面板</h1>
-        <div class="sub">咪咕视频动态 M3U 服务 · 免登录高清 / 扫码登录超清原画</div>
+        <div class="sub">咪咕视频动态 M3U · 节目单 / 回看 / 扫码登录 / 分享链接</div>
       </div>
     </div>
     <div>
@@ -149,28 +176,45 @@
     </div>
   </header>
 
-  <div class="grid">
-    <!-- 订阅地址 -->
-    <div class="card">
-      <h2><span class="ic">▤</span> 订阅地址</h2>
-      <div class="row">
-        <div class="urlbox" id="urlRedirect">加载中…</div>
-        <button class="btn" onclick="copyText('urlRedirect')">复制</button>
+  <!-- 服务状态 + 订阅地址（合并置顶） -->
+  <div class="card full">
+    <h2><span class="ic">◈</span> 服务与订阅</h2>
+    <div class="topcard">
+      <div class="col">
+        <div class="row">
+          <div class="urlbox" id="urlRedirect">加载中…</div>
+          <button class="btn small" onclick="copyText('urlRedirect')">复制</button>
+        </div>
+        <div class="row">
+          <div class="urlbox" id="urlDirect">加载中…</div>
+          <button class="btn small" onclick="copyText('urlDirect')">复制</button>
+        </div>
+        <p class="muted" style="margin-bottom:12px">跳转版：播放时由本服务实时跳转，地址永不过期，推荐日常订阅。直链版：包含真实流地址，适合下载后离线使用。</p>
+        <div class="links">
+          <a href="/playback.xml" target="_blank">节目单 /playback.xml</a>
+          <a href="/status" target="_blank">状态 /status</a>
+          <a href="/refresh" target="_blank">刷新 /refresh</a>
+          <a href="/health" target="_blank">健康 /health</a>
+        </div>
       </div>
-      <div class="row">
-        <div class="urlbox" id="urlDirect">加载中…</div>
-        <button class="btn" onclick="copyText('urlDirect')">复制</button>
-      </div>
-      <p class="muted">跳转版：播放时由本服务实时跳转，地址永不过期，推荐日常订阅。直链版：包含真实流地址，适合下载后离线使用。</p>
-      <div class="links" style="margin-top:12px">
-        <a href="/status" target="_blank">接口状态 /status</a>
-        <a href="/refresh" target="_blank">手动刷新 /refresh</a>
-        <a href="/health" target="_blank">健康检查 /health</a>
-        <a href="/play/608807420" target="_blank">测试播放 /play/608807420</a>
+      <div class="divider"></div>
+      <div class="col">
+        <div class="stats">
+          <div class="stat"><b id="stTotal">–</b><span>频道总数</span></div>
+          <div class="stat ok"><b id="stOk">–</b><span>可播频道</span></div>
+          <div class="stat"><b id="stCache">–</b><span>地址缓存</span></div>
+          <div class="stat mode"><b id="stMode">–</b><span>当前模式</span></div>
+        </div>
+        <div class="row" style="margin-top:14px">
+          <button class="btn primary" onclick="refreshNow()">立即刷新</button>
+          <span class="muted" id="stLast">最后刷新：–</span>
+        </div>
       </div>
     </div>
+  </div>
 
-    <!-- 扫码登录 -->
+  <div class="grid">
+    <!-- 咪咕账号登录 -->
     <div class="card">
       <h2><span class="ic">⌾</span> 咪咕账号登录</h2>
       <div id="loginAnon" class="hidden">
@@ -186,14 +230,13 @@
             <p class="muted" style="margin-top:12px;line-height:1.7">
               使用手机上的 <b>咪咕视频 App</b> → 扫一扫，扫描左侧二维码并确认登录。
               手机会显示“正在TV上登录咪咕家庭版”，这是正常提示，点确认即可。
-              登录后自动填入 userId / token，服务切换到登录模式并请求更高画质。
             </p>
             <p class="muted" style="margin-top:10px;color:var(--yellow)">
-              ⚠ 提示：登录模式需账号有对应会员才能解锁蓝光及以上；服务器长期使用登录态有一定封号风险，请自行斟酌。
+              ⚠ 登录功能未经完整验证且有封号风险，建议默认使用免登录模式。
             </p>
             <div id="qrState" class="hidden" style="margin-top:10px;font-size:13px;color:var(--green)"></div>
             <details style="margin-top:10px">
-              <summary class="muted" style="cursor:pointer">备用：手动填写 userId / token（App 抓包获取，最稳定）</summary>
+              <summary class="muted" style="cursor:pointer">备用：手动填写 userId / token（App 抓包获取）</summary>
               <div style="margin-top:10px">
                 <div class="field">
                   <label>userId（数字 ID）</label>
@@ -244,37 +287,60 @@
               <button class="btn primary" onclick="saveSettings()">保存并刷新</button>
               <button class="btn danger" onclick="logout()">退出登录</button>
             </div>
-            <p class="muted" style="margin-top:8px">保存后自动用新画质重新解析全部频道。</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 服务状态 -->
+    <!-- 分享管理 -->
     <div class="card">
-      <h2><span class="ic">◔</span> 服务状态</h2>
-      <div class="stats">
-        <div class="stat"><b id="stTotal">–</b><span>频道总数</span></div>
-        <div class="stat ok"><b id="stOk">–</b><span>可播频道</span></div>
-        <div class="stat"><b id="stCache">–</b><span>缓存时长</span></div>
-        <div class="stat mode"><b id="stMode">–</b><span>当前模式</span></div>
+      <h2><span class="ic">⇪</span> 分享链接管理</h2>
+      <div id="adminGate" class="hidden">
+        <div class="field">
+          <label>管理密码</label>
+          <input type="password" id="adminPwdInput" placeholder="输入管理密码">
+        </div>
+        <button class="btn primary" onclick="adminLogin()">进入管理</button>
+        <p class="muted" style="margin-top:10px">密码在部署时通过环境变量 <b>MIGU_ADMIN_PASSWORD</b> 设置，默认 admin，请尽快修改。</p>
       </div>
-      <div class="row" style="margin-top:14px">
-        <button class="btn" onclick="refreshNow()">立即刷新地址</button>
-        <span class="muted" id="stLast">最后刷新：–</span>
+      <div id="adminPanel" class="hidden">
+        <div class="row">
+          <div class="field" style="flex:1.4">
+            <label>备注（如朋友名字）</label>
+            <input type="text" id="shareNote" placeholder="例如：张三">
+          </div>
+          <div class="field" style="flex:1">
+            <label>有效期</label>
+            <select id="shareDays">
+              <option value="7">7 天</option>
+              <option value="30">30 天</option>
+              <option value="365">一年</option>
+              <option value="0">永久</option>
+            </select>
+          </div>
+          <div class="field" style="flex:1">
+            <label>&nbsp;</label>
+            <button class="btn primary" style="width:100%" onclick="createShare()">生成分享链接</button>
+          </div>
+        </div>
+        <div id="shareList" class="muted">加载中…</div>
+        <div class="row" style="margin-top:8px;margin-bottom:0">
+          <button class="btn small" onclick="adminLogout()">退出管理</button>
+          <span class="muted">分享链接到期后自动失效，也可随时吊销</span>
+        </div>
       </div>
     </div>
+  </div>
 
-    <!-- 频道列表 -->
-    <div class="card full">
-      <h2><span class="ic">≡</span> 频道列表</h2>
-      <input type="text" class="search" id="search" placeholder="搜索频道名称或分组…" oninput="renderChannels()">
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>分组</th><th>频道</th><th>状态</th><th>操作</th></tr></thead>
-          <tbody id="chTbody"></tbody>
-        </table>
-      </div>
+  <!-- 频道列表 -->
+  <div class="card full">
+    <h2><span class="ic">≡</span> 频道列表</h2>
+    <input type="text" class="search" id="search" placeholder="搜索频道名称或分组…" oninput="renderChannels()">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>分组</th><th>频道</th><th>状态</th><th>操作</th></tr></thead>
+        <tbody id="chTbody"></tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -285,6 +351,7 @@ const $ = id => document.getElementById(id);
 const origin = location.origin;
 let qrTimer = null;
 let streams = [];
+let adminPwd = localStorage.getItem("migu_admin_pwd") || "";
 
 function toast(msg, err) {
   const t = $("toast");
@@ -305,10 +372,61 @@ function copyText(id) {
   const txt = $(id).textContent.trim();
   (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject())
     .then(() => toast("已复制到剪贴板"))
-    .catch(() => { toast("复制失败，请手动选择复制", true); });
+    .catch(() => toast("复制失败，请手动复制", true));
 }
 
-// ---------- 登录 ----------
+function copyStr(txt, label) {
+  (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject())
+    .then(() => toast(label || "已复制"))
+    .catch(() => toast("复制失败，请手动复制", true));
+}
+
+// ---------- 服务状态 ----------
+async function loadStatus() {
+  try {
+    const s = await api("/status");
+    streams = s.streams || [];
+    $("stTotal").textContent = s.channels;
+    $("stOk").textContent = s.resolved;
+    $("stCache").textContent = s.url_cache_minutes + "分";
+    $("stMode").textContent = s.mode === "login" ? "登录模式" : "免登录";
+    $("stLast").textContent = s.last_refresh
+      ? "最后刷新：" + new Date(s.last_refresh * 1000).toLocaleTimeString("zh-CN")
+      : "最后刷新：尚未完成";
+    renderChannels();
+  } catch (e) { toast(e.message, true); }
+}
+
+function renderChannels() {
+  const kw = $("search").value.trim().toLowerCase();
+  const list = streams.filter(s =>
+    !kw || s.name.toLowerCase().includes(kw) || (s.group || "").toLowerCase().includes(kw)
+  );
+  $("chTbody").innerHTML = list.map(s => `
+    <tr>
+      <td>${escapeHtml(s.group || "")}</td>
+      <td>${escapeHtml(s.name)}</td>
+      <td>${s.ok
+        ? '<span class="tag yes">可播</span>'
+        : '<span class="tag no" title="' + escapeHtml(s.error || "") + '">异常</span>'}</td>
+      <td><a style="color:var(--accent);text-decoration:none" href="/play/${s.pID}" target="_blank">▶ 播放</a></td>
+    </tr>`).join("");
+}
+
+function escapeHtml(s) {
+  return String(s || "").replace(/[&<>"']/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+async function refreshNow() {
+  try {
+    await api("/refresh");
+    toast("已开始刷新，稍后自动更新状态");
+    setTimeout(loadStatus, 8000);
+  } catch (e) { toast(e.message, true); }
+}
+
+// ---------- 咪咕登录 ----------
 async function loadLogin() {
   try {
     const info = await api("/api/login/info");
@@ -376,7 +494,7 @@ async function pollQr(sessionId) {
       } else if (s.state === "need_parse") {
         clearInterval(qrTimer);
         st.textContent = "扫码成功但缺少登录字段：" + JSON.stringify(s.raw || {});
-        toast("扫码成功但缺少登录字段，请把页面原始返回发给作者", true);
+        toast("扫码成功但缺少登录字段，请复制下方内容发给作者", true);
         console.log("raw:", s.raw);
       } else {
         clearInterval(qrTimer);
@@ -409,7 +527,7 @@ async function saveManual() {
 
 async function saveSettings() {
   try {
-    const r = await api("/api/settings", {
+    await api("/api/settings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ rate_type: Number($("rateType").value), h265: $("h265").checked }),
@@ -430,54 +548,123 @@ async function logout() {
   } catch (e) { toast(e.message, true); }
 }
 
-// ---------- 状态与频道 ----------
-async function loadStatus() {
+// ---------- 分享管理 ----------
+async function adminApi(url, opt) {
+  opt = opt || {};
+  opt.headers = Object.assign({}, opt.headers || {}, { "X-Admin-Password": adminPwd });
+  const r = await fetch(origin + url, opt);
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401) {
+    renderAdminGate();
+    throw new Error(d.detail || "管理密码错误");
+  }
+  if (!r.ok) throw new Error(d.detail || ("请求失败 " + r.status));
+  return d;
+}
+
+function renderAdminGate() {
+  $("adminGate").classList.remove("hidden");
+  $("adminPanel").classList.add("hidden");
+}
+
+async function adminLogin() {
+  const pwd = $("adminPwdInput").value;
+  if (!pwd) { toast("请输入管理密码", true); return; }
+  adminPwd = pwd;
+  localStorage.setItem("migu_admin_pwd", pwd);
   try {
-    const s = await api("/status");
-    streams = s.streams || [];
-    $("stTotal").textContent = s.channels;
-    $("stOk").textContent = s.resolved;
-    $("stCache").textContent = s.url_cache_minutes + "分";
-    $("stMode").textContent = s.mode === "login" ? "登录模式" : "免登录";
-    $("stLast").textContent = s.last_refresh
-      ? "最后刷新：" + new Date(s.last_refresh * 1000).toLocaleTimeString("zh-CN")
-      : "最后刷新：尚未完成";
-    renderChannels();
+    await loadShares();
+  } catch (e) {
+    toast(e.message, true);
+  }
+}
+
+function adminLogout() {
+  adminPwd = "";
+  localStorage.removeItem("migu_admin_pwd");
+  renderAdminGate();
+  toast("已退出管理");
+}
+
+async function loadShares() {
+  const d = await adminApi("/api/admin/share/list");
+  $("adminGate").classList.add("hidden");
+  $("adminPanel").classList.remove("hidden");
+  const list = d.tokens || [];
+  if (!list.length) {
+    $("shareList").innerHTML = '<span class="muted">还没有分享链接，先在上方生成一个。</span>';
+    return;
+  }
+  $("shareList").innerHTML = list.map(s => {
+    const link = origin + "/s/" + s.token + "/migu.m3u";
+    const stateTag = s.revoked
+      ? '<span class="tag no">已吊销</span>'
+      : s.permanent
+        ? '<span class="tag yes">永久</span>'
+        : s.days_left > 0
+          ? '<span class="tag warn">剩余 ' + s.days_left + ' 天</span>'
+          : '<span class="tag no">已过期</span>';
+    const actions = s.revoked
+      ? '<button class="btn small danger" onclick="deleteShare(\'' + s.token + '\')">删除</button>'
+      : '<button class="btn small" onclick="copyStr(\'' + link + '\',\'已复制分享链接\')">复制链接</button> ' +
+        '<button class="btn small danger" onclick="revokeShare(\'' + s.token + '\')">吊销</button>';
+    return '<div class="share-item">' +
+      '<div class="info"><b>' + escapeHtml(s.note || "未命名") + '</b> ' + stateTag +
+      '<div>' + link + '</div></div>' +
+      '<div class="row" style="margin:0">' + actions + '</div>' +
+      '</div>';
+  }).join("");
+}
+
+async function createShare() {
+  const note = $("shareNote").value.trim();
+  const days = Number($("shareDays").value);
+  try {
+    const d = await adminApi("/api/admin/share", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ note: note, days: days }),
+    });
+    toast("分享链接已生成");
+    $("shareNote").value = "";
+    await loadShares();
   } catch (e) { toast(e.message, true); }
 }
 
-function renderChannels() {
-  const kw = $("search").value.trim().toLowerCase();
-  const list = streams.filter(s =>
-    !kw || s.name.toLowerCase().includes(kw) || (s.group || "").toLowerCase().includes(kw)
-  );
-  $("chTbody").innerHTML = list.map(s => `
-    <tr>
-      <td>${escapeHtml(s.group || "")}</td>
-      <td>${escapeHtml(s.name)}</td>
-      <td>${s.ok
-        ? '<span class="tag yes">可播</span>'
-        : '<span class="tag no" title="' + escapeHtml(s.error || "") + '">异常</span>'}</td>
-      <td><a class="links" style="color:var(--accent);text-decoration:none" href="/play/${s.pID}" target="_blank">▶ 播放</a></td>
-    </tr>`).join("");
-}
-
-function escapeHtml(s) {
-  return String(s || "").replace(/[&<>"']/g, c =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-}
-
-async function refreshNow() {
+async function revokeShare(token) {
+  if (!confirm("确定吊销该分享链接？吊销后立即失效。")) return;
   try {
-    await api("/refresh");
-    toast("已开始刷新，稍后自动更新状态");
-    setTimeout(loadStatus, 8000);
+    await adminApi("/api/admin/share/revoke", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: token }),
+    });
+    toast("已吊销");
+    await loadShares();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function deleteShare(token) {
+  if (!confirm("确定删除该分享记录？")) return;
+  try {
+    await adminApi("/api/admin/share/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: token }),
+    });
+    toast("已删除");
+    await loadShares();
   } catch (e) { toast(e.message, true); }
 }
 
 // ---------- 初始化 ----------
 $("urlRedirect").textContent = origin + "/migu.m3u";
 $("urlDirect").textContent = origin + "/migu_direct.m3u";
+if (adminPwd) {
+  loadShares().catch(() => {});
+} else {
+  renderAdminGate();
+}
 loadLogin();
 loadStatus();
 </script>

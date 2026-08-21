@@ -17,6 +17,7 @@ from pydantic import BaseModel
 
 from .login import LoginManager
 from .migu_client import ChannelState, MiguClient
+from .share import ShareManager
 
 log = logging.getLogger("migu-m3u")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s [migu-m3u] %(message)s")
@@ -55,6 +56,8 @@ SETTINGS = {
     "epg_forward_days": int(os.getenv("MIGU_EPG_FORWARD_DAYS", "1")),
     "epg_refresh_hours": int(os.getenv("MIGU_EPG_REFRESH_HOURS", "6")),
     "epg_file": os.getenv("MIGU_EPG_FILE", "/data/epg.json"),
+    "tokens_file": os.getenv("MIGU_TOKENS_FILE", "/data/tokens.json"),
+    "admin_password": os.getenv("MIGU_ADMIN_PASSWORD", "admin"),
 }
 
 
@@ -62,6 +65,7 @@ class ServiceState:
     def __init__(self) -> None:
         self.migu = MiguClient()
         self.login = LoginManager(SETTINGS["login_file"])
+        self.share = ShareManager(SETTINGS["tokens_file"])
         self.channels: list[ChannelState] = []
         self.lock = asyncio.Lock()
         self.last_refresh: float = 0.0
@@ -319,9 +323,11 @@ class ServiceState:
             await asyncio.sleep(SETTINGS["refresh_minutes"] * 60)
 
     # ---- M3U ----
-    def build_m3u(self, base_url: str, direct: bool) -> str:
+    def build_m3u(self, base_url: str, direct: bool, token: str | None = None) -> str:
+        epg_url = f"{base_url}/playback.xml" if token is None else f"{base_url}/s/{token}/playback.xml"
+        play_prefix = f"{base_url}/play" if token is None else f"{base_url}/s/{token}/play"
         lines = [
-            f'#EXTM3U x-tvg-url="{base_url}/playback.xml" '
+            f'#EXTM3U x-tvg-url="{epg_url}" '
             'catchup="append" '
             'catchup-source="?playbackbegin=${(b)yyyyMMddHHmmss}&playbackend=${(e)yyyyMMddHHmmss}" '
             'catchup-days="3"',
@@ -337,7 +343,7 @@ class ServiceState:
             if direct:
                 lines.append(ch.url)
             else:
-                lines.append(f"{base_url}/play/{ch.pID}")
+                lines.append(f"{play_prefix}/{ch.pID}")
         return "\n".join(lines) + "\n"
 
 
@@ -359,6 +365,17 @@ def base_url_of(request: Request) -> str:
     if SETTINGS["base_url"]:
         return SETTINGS["base_url"]
     return str(request.base_url).rstrip("/")
+
+
+def require_share(token: str) -> None:
+    if not state.share.check(token):
+        raise HTTPException(403, "分享链接无效或已过期")
+
+
+def require_admin(request: Request) -> None:
+    pwd = request.headers.get("X-Admin-Password", "")
+    if not pwd or pwd != SETTINGS["admin_password"]:
+        raise HTTPException(401, "管理密码错误")
 
 
 @app.get("/", include_in_schema=False)
@@ -450,11 +467,103 @@ async def playback_xml():
     return Response(content=state.build_xmltv(), media_type="application/xml; charset=utf-8")
 
 
+async def ensure_ready() -> None:
+    if not state.channels:
+        await state.load_channels(force=True)
+    if not any(c.url for c in state.channels) and not state.refreshing:
+        await state.refresh_urls()
+    if not any(c.url for c in state.channels):
+        raise HTTPException(503, "播放地址尚未解析完成，请稍后重试")
+
+
 @app.get("/refresh")
 async def refresh():
     asyncio.create_task(state.refresh_urls())
     asyncio.create_task(state.refresh_epg())
     return {"status": "refreshing"}
+
+
+# ---------- 分享链接（带 token） ----------
+@app.get("/s/{token}/migu.m3u", response_class=PlainTextResponse)
+async def share_m3u(token: str, request: Request):
+    require_share(token)
+    await ensure_ready()
+    return state.build_m3u(base_url_of(request), direct=False, token=token)
+
+
+@app.get("/s/{token}/play/{pid}")
+async def share_play(token: str, pid: str, playbackbegin: str | None = None, playbackend: str | None = None):
+    require_share(token)
+    if not any(c.pID == pid for c in state.channels):
+        raise HTTPException(404, f"未知频道 ID: {pid}")
+    try:
+        url = await state.get_playurl(pid)
+    except Exception as e:
+        raise HTTPException(502, f"播放地址解析失败: {e}")
+    if playbackbegin or playbackend:
+        extra = []
+        if playbackbegin:
+            extra.append("playbackbegin=" + playbackbegin)
+        if playbackend:
+            extra.append("playbackend=" + playbackend)
+        url += "&" + "&".join(extra)
+    return RedirectResponse(url, status_code=302)
+
+
+@app.get("/s/{token}/playback.xml")
+async def share_playback_xml(token: str):
+    require_share(token)
+    if not state.epg and not state.epg_refreshing:
+        await state.refresh_epg(force=True)
+    if not state.epg:
+        raise HTTPException(503, "节目单尚未生成，请稍后重试")
+    return Response(content=state.build_xmltv(), media_type="application/xml; charset=utf-8")
+
+
+@app.get("/s/{token}/migu_direct.m3u")
+async def share_direct(token: str):
+    require_share(token)
+    raise HTTPException(403, "分享链接不支持直链版（直链无法控制有效期），请使用 /migu.m3u")
+
+
+# ---------- 管理接口（需管理密码） ----------
+@app.get("/api/admin/share/list")
+async def admin_share_list(request: Request):
+    require_admin(request)
+    return {"tokens": state.share.list()}
+
+
+class ShareCreatePayload(BaseModel):
+    note: str = ""
+    days: int = 7
+
+
+@app.post("/api/admin/share")
+async def admin_share_create(payload: ShareCreatePayload, request: Request):
+    require_admin(request)
+    if payload.days not in (7, 30, 365, 0):
+        raise HTTPException(400, "有效期仅支持 7 / 30 / 365 / 0（永久）")
+    return {"ok": True, "share": state.share.create(payload.note, payload.days)}
+
+
+class ShareRevokePayload(BaseModel):
+    token: str
+
+
+@app.post("/api/admin/share/revoke")
+async def admin_share_revoke(payload: ShareRevokePayload, request: Request):
+    require_admin(request)
+    if not state.share.revoke(payload.token):
+        raise HTTPException(404, "令牌不存在")
+    return {"ok": True}
+
+
+@app.post("/api/admin/share/delete")
+async def admin_share_delete(payload: ShareRevokePayload, request: Request):
+    require_admin(request)
+    if not state.share.delete(payload.token):
+        raise HTTPException(404, "令牌不存在")
+    return {"ok": True}
 
 
 # ---------- 扫码登录 ----------

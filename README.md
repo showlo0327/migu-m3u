@@ -100,6 +100,8 @@ http://192.168.1.100:8090/migu.m3u
 - 分享链接**不支持直链版**（直链是真实 CDN 地址，无法控制有效期）；
 - token 就是钥匙，朋友转发给他人也能用，请选择合适有效期并保管好管理密码。
 
+> **访问限制（默认开启）**：为了让分享链接真正生效，服务默认开启 `MIGU_REQUIRE_TOKEN=true`——此时 `/migu.m3u`、`/playback.xml`、`/play/{频道ID}` 均返回 403，只能通过 `/s/{token}/...` 访问，去掉 token 也看不到任何内容。自己用可以生成一个“永久”分享链接，或把 `MIGU_REQUIRE_TOKEN` 改为 `false` 恢复开放访问。直链版 `/migu_direct.m3u` 默认保持开放（自用），如需彻底关闭可设 `MIGU_ALLOW_DIRECT=false`。
+
 ## 配置项（环境变量）
 
 | 变量 | 默认值 | 说明 |
@@ -115,6 +117,8 @@ http://192.168.1.100:8090/migu.m3u
 | `MIGU_LOGIN_FILE` | `/data/login.json` | 扫码登录信息保存位置（容器内路径） |
 | `MIGU_ADMIN_PASSWORD` | `admin` | 面板管理密码（分享链接管理用，请修改） |
 | `MIGU_TOKENS_FILE` | `/data/tokens.json` | 分享令牌保存位置（容器内路径） |
+| `MIGU_REQUIRE_TOKEN` | `true` | 访问限制：开启后 /migu.m3u、/playback.xml、/play 必须用分享链接 |
+| `MIGU_ALLOW_DIRECT` | `true` | 直链版是否开放（自用）；false 则彻底关闭 |
 
 ## 接口一览
 

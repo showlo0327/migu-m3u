@@ -58,6 +58,8 @@ SETTINGS = {
     "epg_file": os.getenv("MIGU_EPG_FILE", "/data/epg.json"),
     "tokens_file": os.getenv("MIGU_TOKENS_FILE", "/data/tokens.json"),
     "admin_password": os.getenv("MIGU_ADMIN_PASSWORD", "admin"),
+    "require_token": env_bool("MIGU_REQUIRE_TOKEN", True),
+    "allow_direct": env_bool("MIGU_ALLOW_DIRECT", True),
 }
 
 
@@ -378,6 +380,16 @@ def require_admin(request: Request) -> None:
         raise HTTPException(401, "管理密码错误")
 
 
+def gate_open_access() -> None:
+    """访问限制开启时，非 token 路径一律 403。"""
+    if SETTINGS["require_token"]:
+        raise HTTPException(
+            403,
+            "已开启访问限制：请使用分享链接 /s/{token}/migu.m3u 访问；"
+            "局域网自用可在 docker-compose.yml 中设置 MIGU_REQUIRE_TOKEN=false 关闭限制",
+        )
+
+
 @app.get("/", include_in_schema=False)
 async def index():
     page = Path(__file__).resolve().parent / "static" / "index.html"
@@ -387,6 +399,14 @@ async def index():
 @app.get("/health")
 async def health():
     return {"status": "ok", "service": "migu-m3u"}
+
+
+@app.get("/api/config")
+async def config():
+    return {
+        "require_token": SETTINGS["require_token"],
+        "allow_direct": SETTINGS["allow_direct"],
+    }
 
 
 @app.get("/status")
@@ -418,6 +438,7 @@ async def status():
 
 @app.get("/migu.m3u", response_class=PlainTextResponse)
 async def migu_m3u(request: Request):
+    gate_open_access()
     if not state.channels:
         raise HTTPException(503, "频道列表尚未加载")
     if not any(c.url for c in state.channels) and not state.refreshing:
@@ -429,6 +450,8 @@ async def migu_m3u(request: Request):
 
 @app.get("/migu_direct.m3u", response_class=PlainTextResponse)
 async def migu_direct_m3u(request: Request):
+    if not SETTINGS["allow_direct"]:
+        raise HTTPException(403, "直链版已关闭（MIGU_ALLOW_DIRECT=false）")
     if not state.channels:
         raise HTTPException(503, "频道列表尚未加载")
     if not any(c.url for c in state.channels) and not state.refreshing:
@@ -440,6 +463,7 @@ async def migu_direct_m3u(request: Request):
 
 @app.get("/play/{pid}")
 async def play(pid: str, playbackbegin: str | None = None, playbackend: str | None = None):
+    gate_open_access()
     if not any(c.pID == pid for c in state.channels):
         raise HTTPException(404, f"未知频道 ID: {pid}")
     try:
@@ -460,6 +484,7 @@ async def play(pid: str, playbackbegin: str | None = None, playbackend: str | No
 @app.get("/playback.xml")
 @app.get("/epg.xml")
 async def playback_xml():
+    gate_open_access()
     if not state.epg and not state.epg_refreshing:
         await state.refresh_epg(force=True)
     if not state.epg:

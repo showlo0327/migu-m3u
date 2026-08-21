@@ -190,6 +190,9 @@
           <button class="btn small" onclick="copyText('urlDirect')">复制</button>
         </div>
         <p class="muted" style="margin-bottom:12px">跳转版：播放时由本服务实时跳转，地址永不过期，推荐日常订阅。直链版：包含真实流地址，适合下载后离线使用。</p>
+        <div id="accessNote" class="hidden" style="margin-bottom:12px;padding:10px 12px;border:1px solid var(--yellow);border-radius:10px;background:rgba(232,179,57,.08);font-size:12.5px;color:var(--yellow)">
+          当前已开启访问限制：<b>/migu.m3u</b> 需通过<b>分享链接</b>访问。给自己用可以生成一个<b>永久</b>分享链接，或在 docker-compose.yml 中设置 <b>MIGU_REQUIRE_TOKEN=false</b>。
+        </div>
         <div class="links">
           <a href="/playback.xml" target="_blank">节目单 /playback.xml</a>
           <a href="/status" target="_blank">状态 /status</a>
@@ -660,6 +663,9 @@ async function deleteShare(token) {
 // ---------- 初始化 ----------
 $("urlRedirect").textContent = origin + "/migu.m3u";
 $("urlDirect").textContent = origin + "/migu_direct.m3u";
+fetch(origin + "/api/config").then(r => r.json()).then(cfg => {
+  if (cfg.require_token) $("accessNote").classList.remove("hidden");
+}).catch(() => {});
 if (adminPwd) {
   loadShares().catch(() => {});
 } else {

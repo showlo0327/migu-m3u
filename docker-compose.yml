@@ -1,0 +1,27 @@
+services:
+  migu-m3u:
+    build: .
+    container_name: migu-m3u
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    environment:
+      # 播放器访问本服务的地址（群晖/飞牛/NAS 的局域网 IP）
+      # 不填则自动根据请求来源生成，局域网内通常无需配置
+      - MIGU_BASE_URL=http://192.168.1.100:8090
+      # 免登录最高可用画质：3=高清720P；如需 H265 原画可设 true
+      - MIGU_RATE_TYPE=3
+      - MIGU_H265=false
+      # 频道分组，按需增删
+      - MIGU_CATEGORIES=央视,卫视,地方,新闻,影视,教育,综艺,少儿,纪实
+      # 播放地址缓存与刷新频率（分钟）
+      - MIGU_URL_CACHE_MINUTES=180
+      - MIGU_REFRESH_MINUTES=60
+    volumes:
+      # 频道列表与扫码登录信息持久化（重启不丢失）
+      - ./data:/data
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"

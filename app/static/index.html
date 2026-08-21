@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>migu-m3u 管理面板</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --card2: #1c2330;
+    --border: #2a3242;
+    --text: #e6edf3;
+    --muted: #8b98a9;
+    --accent: #ff4d4f;
+    --accent2: #e63946;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --red: #f85149;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: radial-gradient(1200px 600px at 20% -10%, #231522 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    min-height: 100vh;
+    padding: 28px 18px 60px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  header {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    margin-bottom: 24px; flex-wrap: wrap;
+  }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo .dot {
+    width: 40px; height: 40px; border-radius: 12px; flex: none;
+    background: linear-gradient(135deg, #ff4d4f, #b3202b);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 20px; color: #fff; box-shadow: 0 6px 18px rgba(230,57,70,.35);
+  }
+  h1 { font-size: 20px; font-weight: 700; }
+  .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px;
+    border-radius: 999px; font-size: 13px; border: 1px solid var(--border); background: var(--card);
+  }
+  .badge .p { width: 8px; height: 8px; border-radius: 50%; }
+  .badge.on  .p { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .badge.off .p { background: var(--muted); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; margin-bottom: 16px;
+  }
+  .card h2 { font-size: 15px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .card h2 .ic { color: var(--accent); }
+  .full { grid-column: 1 / -1; }
+  .muted { color: var(--muted); font-size: 12.5px; }
+  .row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .urlbox {
+    flex: 1; min-width: 260px; background: var(--card2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 12px; font-size: 13px; color: var(--text);
+    word-break: break-all; font-family: ui-monospace, Consolas, monospace;
+  }
+  .btn {
+    appearance: none; border: 1px solid var(--border); background: var(--card2); color: var(--text);
+    border-radius: 10px; padding: 9px 16px; font-size: 13px; cursor: pointer; transition: .15s;
+  }
+  .btn:hover { border-color: var(--accent); color: #fff; }
+  .btn.primary { background: linear-gradient(135deg, var(--accent2), #b3202b); border: none; font-weight: 600; }
+  .btn.primary:hover { filter: brightness(1.12); }
+  .btn.danger:hover { border-color: var(--red); color: var(--red); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .qrcode-area {
+    display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  }
+  .qr-box {
+    width: 210px; height: 210px; border-radius: 14px; background: #fff; padding: 10px;
+    display: flex; align-items: center; justify-content: center; position: relative; flex: none;
+  }
+  .qr-box img { width: 100%; height: 100%; object-fit: contain; border-radius: 8px; }
+  .qr-tip { text-align: center; font-size: 13px; margin-top: 8px; }
+  .login-form { flex: 1; min-width: 240px; }
+  .login-form .field { margin-bottom: 12px; }
+  .login-form label { display: block; font-size: 12.5px; color: var(--muted); margin-bottom: 6px; }
+  select, input[type=text] {
+    width: 100%; background: var(--card2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 10px; padding: 10px 12px; font-size: 13.5px;
+  }
+  .switch { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .switch input { display: none; }
+  .switch .track {
+    width: 40px; height: 22px; border-radius: 999px; background: #30363d; position: relative; transition: .2s;
+  }
+  .switch .track::after {
+    content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px;
+    border-radius: 50%; background: #fff; transition: .2s;
+  }
+  .switch input:checked + .track { background: var(--accent); }
+  .switch input:checked + .track::after { left: 21px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .stat { background: var(--card2); border: 1px solid var(--border); border-radius: 12px; padding: 12px; text-align: center; }
+  .stat b { display: block; font-size: 22px; margin-bottom: 2px; }
+  .stat span { font-size: 12px; color: var(--muted); }
+  .stat.ok b { color: var(--green); }
+  .stat.mode b { color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; color: var(--muted); font-weight: 500; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  td { padding: 8px 10px; border-bottom: 1px solid #20262f; }
+  tr:hover td { background: rgba(255,255,255,.02); }
+  .tag {
+    display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px;
+  }
+  .tag.yes { background: rgba(63,185,80,.15); color: var(--green); }
+  .tag.no { background: rgba(248,81,73,.13); color: var(--red); }
+  .search { width: 100%; margin-bottom: 12px; }
+  .table-wrap { max-height: 480px; overflow: auto; border: 1px solid var(--border); border-radius: 12px; }
+  .toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
+    background: #1c2330; border: 1px solid var(--border); color: var(--text);
+    padding: 12px 20px; border-radius: 12px; font-size: 13.5px; opacity: 0; pointer-events: none;
+    transition: .25s; z-index: 99; max-width: 80vw; box-shadow: 0 10px 30px rgba(0,0,0,.4);
+  }
+  .toast.show { opacity: 1; }
+  .toast.err { border-color: var(--red); }
+  .links { display: flex; gap: 8px; flex-wrap: wrap; }
+  .links a { color: var(--accent); text-decoration: none; font-size: 12.5px; }
+  .links a:hover { text-decoration: underline; }
+  .hidden { display: none !important; }
+  @media (max-width: 760px) {
+    .grid { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">
+      <div class="dot">M</div>
+      <div>
+        <h1>migu-m3u 管理面板</h1>
+        <div class="sub">咪咕视频动态 M3U 服务 · 免登录高清 / 扫码登录超清原画</div>
+      </div>
+    </div>
+    <div>
+      <span id="modeBadge" class="badge off"><span class="p"></span><span id="modeText">加载中…</span></span>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- 订阅地址 -->
+    <div class="card">
+      <h2><span class="ic">▤</span> 订阅地址</h2>
+      <div class="row">
+        <div class="urlbox" id="urlRedirect">加载中…</div>
+        <button class="btn" onclick="copyText('urlRedirect')">复制</button>
+      </div>
+      <div class="row">
+        <div class="urlbox" id="urlDirect">加载中…</div>
+        <button class="btn" onclick="copyText('urlDirect')">复制</button>
+      </div>
+      <p class="muted">跳转版：播放时由本服务实时跳转，地址永不过期，推荐日常订阅。直链版：包含真实流地址，适合下载后离线使用。</p>
+      <div class="links" style="margin-top:12px">
+        <a href="/status" target="_blank">接口状态 /status</a>
+        <a href="/refresh" target="_blank">手动刷新 /refresh</a>
+        <a href="/health" target="_blank">健康检查 /health</a>
+        <a href="/play/608807420" target="_blank">测试播放 /play/608807420</a>
+      </div>
+    </div>
+
+    <!-- 扫码登录 -->
+    <div class="card">
+      <h2><span class="ic">⌾</span> 咪咕账号登录</h2>
+      <div id="loginAnon" class="hidden">
+        <div class="qrcode-area">
+          <div>
+            <div class="qr-box" id="qrBox">
+              <span class="muted" style="font-size:13px">点击下方按钮<br>获取二维码</span>
+            </div>
+            <div class="qr-tip" id="qrTip">用咪咕视频 App 扫码登录，可解锁蓝光 / 原画 / 4K</div>
+          </div>
+          <div class="login-form">
+            <button class="btn primary" id="qrBtn" onclick="startQr()">获取二维码</button>
+            <p class="muted" style="margin-top:12px;line-height:1.7">
+              使用手机上的 <b>咪咕视频 App</b> → 扫一扫，扫描左侧二维码并确认登录。
+              手机会显示“正在TV上登录咪咕家庭版”，这是正常提示，点确认即可。
+              登录后自动填入 userId / token，服务切换到登录模式并请求更高画质。
+            </p>
+            <p class="muted" style="margin-top:10px;color:var(--yellow)">
+              ⚠ 提示：登录模式需账号有对应会员才能解锁蓝光及以上；服务器长期使用登录态有一定封号风险，请自行斟酌。
+            </p>
+            <div id="qrState" class="hidden" style="margin-top:10px;font-size:13px;color:var(--green)"></div>
+            <details style="margin-top:10px">
+              <summary class="muted" style="cursor:pointer">备用：手动填写 userId / token（App 抓包获取，最稳定）</summary>
+              <div style="margin-top:10px">
+                <div class="field">
+                  <label>userId（数字 ID）</label>
+                  <input type="text" id="manualUid" placeholder="例如 1234567890">
+                </div>
+                <div class="field">
+                  <label>userToken（nlps 开头）</label>
+                  <input type="text" id="manualTok" placeholder="例如 nlpsXXXXXXXXXXXXXXXXXXXXXXXX">
+                </div>
+                <button class="btn" onclick="saveManual()">保存并登录</button>
+              </div>
+            </details>
+          </div>
+        </div>
+      </div>
+      <div id="loginOn" class="hidden">
+        <div class="qrcode-area">
+          <div class="qr-box">
+            <div style="text-align:center">
+              <div style="font-size:34px">👤</div>
+              <div style="margin-top:8px;font-size:13px;color:#333">已登录</div>
+            </div>
+          </div>
+          <div class="login-form">
+            <div class="field">
+              <label>咪咕用户 ID</label>
+              <input type="text" id="userId" readonly>
+            </div>
+            <div class="row" style="margin-top:12px">
+              <div class="field" style="flex:1">
+                <label>画质</label>
+                <select id="rateType">
+                  <option value="3">高清 720P</option>
+                  <option value="4">蓝光 1080P（需会员）</option>
+                  <option value="7">原画（需会员）</option>
+                  <option value="9">4K（需会员）</option>
+                </select>
+              </div>
+              <div class="field" style="flex:1">
+                <label>H265 原画编码</label>
+                <label class="switch">
+                  <input type="checkbox" id="h265">
+                  <span class="track"></span>
+                </label>
+              </div>
+            </div>
+            <div class="row">
+              <button class="btn primary" onclick="saveSettings()">保存并刷新</button>
+              <button class="btn danger" onclick="logout()">退出登录</button>
+            </div>
+            <p class="muted" style="margin-top:8px">保存后自动用新画质重新解析全部频道。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 服务状态 -->
+    <div class="card">
+      <h2><span class="ic">◔</span> 服务状态</h2>
+      <div class="stats">
+        <div class="stat"><b id="stTotal">–</b><span>频道总数</span></div>
+        <div class="stat ok"><b id="stOk">–</b><span>可播频道</span></div>
+        <div class="stat"><b id="stCache">–</b><span>缓存时长</span></div>
+        <div class="stat mode"><b id="stMode">–</b><span>当前模式</span></div>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn" onclick="refreshNow()">立即刷新地址</button>
+        <span class="muted" id="stLast">最后刷新：–</span>
+      </div>
+    </div>
+
+    <!-- 频道列表 -->
+    <div class="card full">
+      <h2><span class="ic">≡</span> 频道列表</h2>
+      <input type="text" class="search" id="search" placeholder="搜索频道名称或分组…" oninput="renderChannels()">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>分组</th><th>频道</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody id="chTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const origin = location.origin;
+let qrTimer = null;
+let streams = [];
+
+function toast(msg, err) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.className = "toast show" + (err ? " err" : "");
+  clearTimeout(t._h);
+  t._h = setTimeout(() => t.className = "toast", 2600);
+}
+
+async function api(url, opt) {
+  const r = await fetch(origin + url, opt);
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.detail || data.message || ("请求失败 " + r.status));
+  return data;
+}
+
+function copyText(id) {
+  const txt = $(id).textContent.trim();
+  (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject())
+    .then(() => toast("已复制到剪贴板"))
+    .catch(() => { toast("复制失败，请手动选择复制", true); });
+}
+
+// ---------- 登录 ----------
+async function loadLogin() {
+  try {
+    const info = await api("/api/login/info");
+    renderLogin(info);
+  } catch (e) { toast(e.message, true); }
+}
+
+function renderLogin(info) {
+  if (info.logged_in) {
+    $("loginAnon").classList.add("hidden");
+    $("loginOn").classList.remove("hidden");
+    $("userId").value = info.user_id;
+    $("rateType").value = String(info.rate_type);
+    $("h265").checked = !!info.h265;
+    $("modeBadge").className = "badge on";
+    $("modeText").textContent = "已登录 · 用户 " + info.user_id;
+  } else {
+    $("loginOn").classList.add("hidden");
+    $("loginAnon").classList.remove("hidden");
+    $("modeBadge").className = "badge off";
+    $("modeText").textContent = "免登录模式 · 720P 高清";
+  }
+}
+
+async function startQr() {
+  const btn = $("qrBtn");
+  btn.disabled = true;
+  btn.textContent = "获取中…";
+  try {
+    const info = await api("/api/login/qrcode", { method: "POST" });
+    $("qrBox").innerHTML = '<img src="' + info.qrcUrl + '" alt="二维码">';
+    $("qrTip").textContent = "请用咪咕视频 App 扫码，并点击确认登录";
+    btn.textContent = "刷新二维码";
+    btn.disabled = false;
+    pollQr(info.session_id);
+  } catch (e) {
+    toast(e.message, true);
+    btn.disabled = false;
+    btn.textContent = "获取二维码";
+  }
+}
+
+async function pollQr(sessionId) {
+  clearInterval(qrTimer);
+  qrTimer = setInterval(async () => {
+    try {
+      const s = await api("/api/login/qrcode/status?session_id=" + sessionId);
+      const st = $("qrState");
+      st.classList.remove("hidden");
+      if (s.state === "waiting") {
+        st.textContent = "等待扫码…";
+      } else if (s.state === "confirmed") {
+        st.textContent = "已扫码！请回到手机点击“确认登录”";
+      } else if (s.state === "success") {
+        clearInterval(qrTimer);
+        st.textContent = "登录成功！正在切换到登录模式…";
+        toast("登录成功");
+        await loadLogin();
+        await loadStatus();
+        refreshNow();
+      } else if (s.state === "expired") {
+        clearInterval(qrTimer);
+        st.textContent = "二维码已失效，请点击“刷新二维码”重新获取";
+        toast("二维码已失效", true);
+      } else if (s.state === "need_parse") {
+        clearInterval(qrTimer);
+        st.textContent = "扫码成功但缺少登录字段：" + JSON.stringify(s.raw || {});
+        toast("扫码成功但缺少登录字段，请把页面原始返回发给作者", true);
+        console.log("raw:", s.raw);
+      } else {
+        clearInterval(qrTimer);
+        st.textContent = s.message || "扫码状态异常";
+        toast(s.message || "扫码状态异常", true);
+      }
+    } catch (e) {
+      clearInterval(qrTimer);
+      toast(e.message, true);
+    }
+  }, 2500);
+}
+
+async function saveManual() {
+  const uid = $("manualUid").value.trim();
+  const tok = $("manualTok").value.trim();
+  if (!uid || !tok) { toast("请填写 userId 和 userToken", true); return; }
+  try {
+    await api("/api/login/manual", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: uid, user_token: tok }),
+    });
+    toast("已保存登录信息，正在刷新播放地址…");
+    await loadLogin();
+    await loadStatus();
+    refreshNow();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function saveSettings() {
+  try {
+    const r = await api("/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rate_type: Number($("rateType").value), h265: $("h265").checked }),
+    });
+    toast("设置已保存，正在刷新播放地址…");
+    await loadStatus();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function logout() {
+  if (!confirm("确定退出登录？将切换回免登录 720P 模式。")) return;
+  try {
+    await api("/api/login/logout", { method: "POST" });
+    toast("已退出登录");
+    await loadLogin();
+    await loadStatus();
+    refreshNow();
+  } catch (e) { toast(e.message, true); }
+}
+
+// ---------- 状态与频道 ----------
+async function loadStatus() {
+  try {
+    const s = await api("/status");
+    streams = s.streams || [];
+    $("stTotal").textContent = s.channels;
+    $("stOk").textContent = s.resolved;
+    $("stCache").textContent = s.url_cache_minutes + "分";
+    $("stMode").textContent = s.mode === "login" ? "登录模式" : "免登录";
+    $("stLast").textContent = s.last_refresh
+      ? "最后刷新：" + new Date(s.last_refresh * 1000).toLocaleTimeString("zh-CN")
+      : "最后刷新：尚未完成";
+    renderChannels();
+  } catch (e) { toast(e.message, true); }
+}
+
+function renderChannels() {
+  const kw = $("search").value.trim().toLowerCase();
+  const list = streams.filter(s =>
+    !kw || s.name.toLowerCase().includes(kw) || (s.group || "").toLowerCase().includes(kw)
+  );
+  $("chTbody").innerHTML = list.map(s => `
+    <tr>
+      <td>${escapeHtml(s.group || "")}</td>
+      <td>${escapeHtml(s.name)}</td>
+      <td>${s.ok
+        ? '<span class="tag yes">可播</span>'
+        : '<span class="tag no" title="' + escapeHtml(s.error || "") + '">异常</span>'}</td>
+      <td><a class="links" style="color:var(--accent);text-decoration:none" href="/play/${s.pID}" target="_blank">▶ 播放</a></td>
+    </tr>`).join("");
+}
+
+function escapeHtml(s) {
+  return String(s || "").replace(/[&<>"']/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+async function refreshNow() {
+  try {
+    await api("/refresh");
+    toast("已开始刷新，稍后自动更新状态");
+    setTimeout(loadStatus, 8000);
+  } catch (e) { toast(e.message, true); }
+}
+
+// ---------- 初始化 ----------
+$("urlRedirect").textContent = origin + "/migu.m3u";
+$("urlDirect").textContent = origin + "/migu_direct.m3u";
+loadLogin();
+loadStatus();
+</script>
+</body>
+</html>

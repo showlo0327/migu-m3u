@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>migu-m3u 管理面板</title>
+<title>migu-m3u 管理系统</title>
 <style>
   :root {
     --bg: #0b0f17;
@@ -21,16 +21,66 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    background:
-      radial-gradient(900px 420px at 15% -8%, #261520 0%, transparent 60%),
-      radial-gradient(900px 420px at 90% -10%, #12233a 0%, transparent 55%),
-      var(--bg);
+    background: var(--bg);
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
     min-height: 100vh;
-    padding: 26px 18px 60px;
   }
-  .wrap { max-width: 1100px; margin: 0 auto; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 26px 18px 60px; }
+
+  /* ---------- 登录页 ---------- */
+  .login-page {
+    position: fixed; inset: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(900px 480px at 20% -10%, #2a1824 0%, transparent 60%),
+      radial-gradient(800px 420px at 95% 110%, #12253f 0%, transparent 55%),
+      #0b0f17;
+  }
+  .login-page {
+    background: url("/wallpaper") center / cover no-repeat,
+      radial-gradient(900px 480px at 20% -10%, #2a1824 0%, transparent 60%),
+      radial-gradient(800px 420px at 95% 110%, #12253f 0%, transparent 55%),
+      #0b0f17;
+  }
+  .login-page .veil {
+    position: absolute; inset: 0;
+    background: rgba(5, 8, 15, .48);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  .login-card {
+    position: relative; z-index: 1; width: 360px; max-width: 90vw;
+    background: rgba(18, 24, 38, .82);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 20px; padding: 34px 30px 30px;
+    box-shadow: 0 24px 60px rgba(0,0,0,.5);
+  }
+  .login-card .logo-row { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px; }
+  .login-card .logo-row .dot {
+    width: 42px; height: 42px; border-radius: 13px;
+    background: linear-gradient(135deg, var(--accent), #8f1420);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 20px; color: #fff;
+  }
+  .login-card h1 { font-size: 21px; text-align: center; letter-spacing: 1px; }
+  .login-card .sub { text-align: center; color: var(--muted); font-size: 12.5px; margin: 6px 0 24px; }
+  .login-card .field { margin-bottom: 14px; }
+  .login-card label { display: block; font-size: 12.5px; color: var(--muted); margin-bottom: 6px; }
+  .login-card input {
+    width: 100%; background: rgba(26,34,51,.9); border: 1px solid var(--border); color: var(--text);
+    border-radius: 11px; padding: 12px 14px; font-size: 14px;
+  }
+  .login-card input:focus { outline: none; border-color: var(--accent); }
+  .login-card .btn {
+    width: 100%; padding: 12px; border: none; border-radius: 11px; cursor: pointer;
+    background: linear-gradient(135deg, var(--accent2), #8f1420); color: #fff;
+    font-size: 14px; font-weight: 600; transition: .15s;
+  }
+  .login-card .btn:hover { filter: brightness(1.15); }
+  .login-err { color: var(--red); font-size: 12.5px; text-align: center; margin-top: 10px; min-height: 18px; }
+
+  /* ---------- 顶栏 ---------- */
   header {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
     margin-bottom: 20px; flex-wrap: wrap;
@@ -43,37 +93,35 @@
     font-weight: 800; font-size: 21px; color: #fff;
     box-shadow: 0 8px 22px rgba(217,38,56,.35);
   }
-  h1 { font-size: 20px; font-weight: 700; letter-spacing: .2px; }
+  h1 { font-size: 20px; font-weight: 700; }
   .sub { color: var(--muted); font-size: 12.5px; margin-top: 3px; }
+  .top-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .badge {
     display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px;
     border-radius: 999px; font-size: 13px; border: 1px solid var(--border); background: var(--card);
   }
   .badge .p { width: 8px; height: 8px; border-radius: 50%; }
-  .badge.on  .p { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .badge.on .p { background: var(--green); box-shadow: 0 0 8px var(--green); }
   .badge.off .p { background: var(--muted); }
+
+  /* ---------- 卡片 ---------- */
   .card {
     background: linear-gradient(180deg, rgba(255,255,255,.02), transparent 30%), var(--card);
-    border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 22px; margin-bottom: 16px;
+    border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; margin-bottom: 16px;
   }
-  .card h2 {
-    font-size: 15px; font-weight: 600; margin-bottom: 16px;
-    display: flex; align-items: center; gap: 9px;
-  }
+  .card h2 { font-size: 15px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 9px; }
   .card h2 .ic {
     width: 26px; height: 26px; border-radius: 8px; flex: none;
     background: rgba(255,92,95,.12); color: var(--accent);
     display: inline-flex; align-items: center; justify-content: center; font-size: 13px;
   }
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .full { grid-column: 1 / -1; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .muted { color: var(--muted); font-size: 12.5px; }
   .row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
   .urlbox {
-    flex: 1; min-width: 240px; background: var(--card2); border: 1px solid var(--border);
-    border-radius: 10px; padding: 10px 12px; font-size: 12.5px; color: var(--text);
-    word-break: break-all; font-family: ui-monospace, Consolas, monospace;
+    flex: 1; min-width: 220px; background: var(--card2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 12px; font-size: 12.5px; word-break: break-all;
+    font-family: ui-monospace, Consolas, monospace;
   }
   .btn {
     appearance: none; border: 1px solid var(--border); background: var(--card2); color: var(--text);
@@ -84,11 +132,7 @@
   .btn.primary:hover { filter: brightness(1.15); }
   .btn.danger:hover { border-color: var(--red); color: var(--red); }
   .btn.small { padding: 6px 11px; font-size: 12px; border-radius: 8px; }
-  .btn:disabled { opacity: .5; cursor: not-allowed; }
-  .topcard { display: grid; grid-template-columns: 1.15fr .85fr; gap: 26px; }
-  .topcard .col { min-width: 0; }
-  .divider { width: 1px; background: var(--border); }
-  .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; }
   .stat {
     background: var(--card2); border: 1px solid var(--border); border-radius: 12px;
     padding: 13px; display: flex; flex-direction: column; gap: 3px;
@@ -100,14 +144,21 @@
   .links { display: flex; gap: 8px; flex-wrap: wrap; }
   .links a { color: var(--accent); text-decoration: none; font-size: 12.5px; }
   .links a:hover { text-decoration: underline; }
-  .qrcode-area { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .warn-box {
+    padding: 10px 12px; border: 1px solid var(--yellow); border-radius: 10px;
+    background: rgba(232,179,57,.08); font-size: 12.5px; color: var(--yellow);
+    margin-bottom: 12px; line-height: 1.7;
+  }
+
+  /* ---------- 咪咕登录 ---------- */
+  .qrcode-area { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
   .qr-box {
-    width: 200px; height: 200px; border-radius: 14px; background: #fff; padding: 10px;
-    display: flex; align-items: center; justify-content: center; position: relative; flex: none;
+    width: 196px; height: 196px; border-radius: 14px; background: #fff; padding: 10px;
+    display: flex; align-items: center; justify-content: center; flex: none;
   }
   .qr-box img { width: 100%; height: 100%; object-fit: contain; border-radius: 8px; }
   .qr-tip { text-align: center; font-size: 12.5px; margin-top: 8px; color: var(--muted); }
-  .login-form { flex: 1; min-width: 240px; }
+  .login-form { flex: 1; min-width: 230px; }
   .login-form .field { margin-bottom: 12px; }
   .login-form label { display: block; font-size: 12.5px; color: var(--muted); margin-bottom: 6px; }
   select, input[type=text], input[type=password] {
@@ -126,120 +177,130 @@
   }
   .switch input:checked + .track { background: var(--accent); }
   .switch input:checked + .track::after { left: 21px; }
+
+  /* ---------- 表格 ---------- */
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; color: var(--muted); font-weight: 500; padding: 8px 10px; border-bottom: 1px solid var(--border); }
-  td { padding: 8px 10px; border-bottom: 1px solid #1d2637; vertical-align: middle; }
+  th { text-align: left; color: var(--muted); font-weight: 500; padding: 9px 10px; border-bottom: 1px solid var(--border); }
+  td { padding: 9px 10px; border-bottom: 1px solid #1d2637; vertical-align: middle; }
   tr:hover td { background: rgba(255,255,255,.02); }
   .tag { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; }
   .tag.yes { background: rgba(62,207,110,.13); color: var(--green); }
   .tag.no { background: rgba(255,92,95,.12); color: var(--red); }
   .tag.warn { background: rgba(232,179,57,.14); color: var(--yellow); }
-  .search { width: 100%; margin-bottom: 12px; }
-  .table-wrap { max-height: 480px; overflow: auto; border: 1px solid var(--border); border-radius: 12px; }
-  .toast {
-    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
-    background: #1c2436; border: 1px solid var(--border); color: var(--text);
-    padding: 12px 20px; border-radius: 12px; font-size: 13.5px; opacity: 0; pointer-events: none;
-    transition: .25s; z-index: 99; max-width: 82vw; box-shadow: 0 12px 34px rgba(0,0,0,.45);
+  .table-wrap { border: 1px solid var(--border); border-radius: 12px; overflow: auto; }
+  .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+  .search { max-width: 300px; }
+
+  /* ---------- 弹窗 ---------- */
+  .overlay {
+    position: fixed; inset: 0; z-index: 90; display: none; align-items: center; justify-content: center;
+    background: rgba(4, 7, 12, .6); backdrop-filter: blur(4px);
   }
-  .toast.show { opacity: 1; }
-  .toast.err { border-color: var(--red); }
-  .share-item {
-    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-    background: var(--card2); border: 1px solid var(--border); border-radius: 12px;
-    padding: 12px 14px; margin-bottom: 10px;
+  .overlay.show { display: flex; }
+  .modal {
+    width: 420px; max-width: 92vw; background: #151d2e; border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px; box-shadow: 0 24px 60px rgba(0,0,0,.5);
   }
-  .share-item .info { flex: 1; min-width: 200px; }
-  .share-item .info b { font-size: 13.5px; }
-  .share-item .info div { font-size: 12px; color: var(--muted); margin-top: 3px; word-break: break-all; }
+  .modal h3 { font-size: 16px; margin-bottom: 16px; }
+  .modal .field { margin-bottom: 14px; }
+  .modal label { display: block; font-size: 12.5px; color: var(--muted); margin-bottom: 6px; }
+  .modal .actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+  .modal .warn { border-color: var(--red); color: var(--red); margin-bottom: 0; }
   .hidden { display: none !important; }
   @media (max-width: 860px) {
-    .grid { grid-template-columns: 1fr; }
-    .topcard { grid-template-columns: 1fr; }
-    .divider { display: none; }
+    .grid2 { grid-template-columns: 1fr; }
     .stats { grid-template-columns: repeat(2, 1fr); }
   }
 </style>
 </head>
 <body>
-<div class="wrap">
+
+<!-- 登录页 -->
+<div id="loginView" class="login-page">
+  <div class="veil"></div>
+  <div class="login-card">
+    <div class="logo-row"><div class="dot">M</div></div>
+    <h1>migu-m3u 管理系统</h1>
+    <div class="sub">咪咕视频动态 M3U · 节目单 / 回看 / 分享链接</div>
+    <div class="field">
+      <label>管理密码</label>
+      <input type="password" id="loginPwd" placeholder="请输入管理密码" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn" onclick="doLogin()">进入管理系统</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- 主界面 -->
+<div id="mainView" class="wrap hidden">
   <header>
     <div class="logo">
       <div class="dot">M</div>
       <div>
-        <h1>migu-m3u 管理面板</h1>
+        <h1 id="panelTitle">migu-m3u 管理面板</h1>
         <div class="sub">咪咕视频动态 M3U · 节目单 / 回看 / 扫码登录 / 分享链接</div>
       </div>
     </div>
-    <div>
+    <div class="top-actions">
       <span id="modeBadge" class="badge off"><span class="p"></span><span id="modeText">加载中…</span></span>
+      <button class="btn" onclick="openSettings()">⚙ 设置</button>
+      <button class="btn danger" onclick="panelLogout()">退出</button>
     </div>
   </header>
 
-  <!-- 服务状态 + 订阅地址（合并置顶） -->
-  <div class="card full">
-    <h2><span class="ic">◈</span> 服务与订阅</h2>
-    <div class="topcard">
-      <div class="col">
-        <div class="row">
-          <div class="urlbox" id="urlRedirect">加载中…</div>
-          <button class="btn small" onclick="copyText('urlRedirect')">复制</button>
-        </div>
-        <div class="row">
-          <div class="urlbox" id="urlDirect">加载中…</div>
-          <button class="btn small" onclick="copyText('urlDirect')">复制</button>
-        </div>
-        <p class="muted" style="margin-bottom:12px">跳转版：播放时由本服务实时跳转，地址永不过期，推荐日常订阅。直链版：包含真实流地址，适合下载后离线使用。</p>
-        <div id="accessNote" class="hidden" style="margin-bottom:12px;padding:10px 12px;border:1px solid var(--yellow);border-radius:10px;background:rgba(232,179,57,.08);font-size:12.5px;color:var(--yellow)">
-          当前已开启访问限制：<b>/migu.m3u</b> 需通过<b>分享链接</b>访问。给自己用可以生成一个<b>永久</b>分享链接，或在 docker-compose.yml 中设置 <b>MIGU_REQUIRE_TOKEN=false</b>。
-        </div>
-        <div class="links">
-          <a href="/playback.xml" target="_blank">节目单 /playback.xml</a>
-          <a href="/status" target="_blank">状态 /status</a>
-          <a href="/refresh" target="_blank">刷新 /refresh</a>
-          <a href="/health" target="_blank">健康 /health</a>
-        </div>
+  <div class="grid2">
+    <!-- 服务与订阅：状态在上，订阅地址在下 -->
+    <div class="card">
+      <h2><span class="ic">◈</span> 服务与订阅</h2>
+      <div class="stats">
+        <div class="stat"><b id="stTotal">–</b><span>频道总数</span></div>
+        <div class="stat ok"><b id="stOk">–</b><span>可播频道</span></div>
+        <div class="stat"><b id="stCache">–</b><span>地址缓存</span></div>
+        <div class="stat mode"><b id="stMode">–</b><span>当前模式</span></div>
       </div>
-      <div class="divider"></div>
-      <div class="col">
-        <div class="stats">
-          <div class="stat"><b id="stTotal">–</b><span>频道总数</span></div>
-          <div class="stat ok"><b id="stOk">–</b><span>可播频道</span></div>
-          <div class="stat"><b id="stCache">–</b><span>地址缓存</span></div>
-          <div class="stat mode"><b id="stMode">–</b><span>当前模式</span></div>
-        </div>
-        <div class="row" style="margin-top:14px">
-          <button class="btn primary" onclick="refreshNow()">立即刷新</button>
-          <span class="muted" id="stLast">最后刷新：–</span>
-        </div>
+      <div class="row" style="margin-bottom:18px">
+        <button class="btn primary" onclick="refreshNow()">立即刷新</button>
+        <span class="muted" id="stLast">最后刷新：–</span>
+      </div>
+      <div id="accessNote" class="hidden warn-box">
+        当前已开启访问限制：<b>/migu.m3u</b> 需通过<b>分享链接</b>访问。给自己用可生成一个<b>永久</b>分享链接，或在 docker-compose.yml 中设置 <b>MIGU_REQUIRE_TOKEN=false</b>。
+      </div>
+      <div class="row">
+        <div class="urlbox" id="urlRedirect">加载中…</div>
+        <button class="btn small" onclick="copyText('urlRedirect')">复制</button>
+      </div>
+      <div class="row">
+        <div class="urlbox" id="urlDirect">加载中…</div>
+        <button class="btn small" onclick="copyText('urlDirect')">复制</button>
+      </div>
+      <p class="muted" style="margin:2px 0 12px">跳转版播放时由本服务实时跳转；直链版包含真实流地址，适合下载离线使用。</p>
+      <div class="links">
+        <a href="/playback.xml" target="_blank">节目单 /playback.xml</a>
+        <a href="/status" target="_blank">状态 /status</a>
+        <a href="/refresh" target="_blank">刷新 /refresh</a>
+        <a href="/health" target="_blank">健康 /health</a>
       </div>
     </div>
-  </div>
 
-  <div class="grid">
     <!-- 咪咕账号登录 -->
     <div class="card">
       <h2><span class="ic">⌾</span> 咪咕账号登录</h2>
-      <div id="loginAnon" class="hidden">
+      <div class="warn-box">
+        ⚠️ <b>扫码登录存在封号风险，且该功能尚未完善</b>，仅供研究参考。建议默认使用免登录模式（720P 高清）。
+      </div>
+      <div id="loginAnon">
         <div class="qrcode-area">
           <div>
             <div class="qr-box" id="qrBox">
               <span class="muted" style="font-size:13px">点击下方按钮<br>获取二维码</span>
             </div>
-            <div class="qr-tip" id="qrTip">用咪咕视频 App 扫码登录，可解锁蓝光 / 原画 / 4K</div>
+            <div class="qr-tip" id="qrTip">用咪咕视频 App 扫码登录，解锁蓝光 / 原画 / 4K</div>
           </div>
           <div class="login-form">
-            <button class="btn primary" id="qrBtn" onclick="startQr()">获取二维码</button>
-            <p class="muted" style="margin-top:12px;line-height:1.7">
-              使用手机上的 <b>咪咕视频 App</b> → 扫一扫，扫描左侧二维码并确认登录。
-              手机会显示“正在TV上登录咪咕家庭版”，这是正常提示，点确认即可。
-            </p>
-            <p class="muted" style="margin-top:10px;color:var(--yellow)">
-              ⚠ 登录功能未经完整验证且有封号风险，建议默认使用免登录模式。
-            </p>
+            <button class="btn primary" id="qrBtn" onclick="askQrWarn()">扫码登录</button>
             <div id="qrState" class="hidden" style="margin-top:10px;font-size:13px;color:var(--green)"></div>
             <details style="margin-top:10px">
-              <summary class="muted" style="cursor:pointer">备用：手动填写 userId / token（App 抓包获取）</summary>
+              <summary class="muted" style="cursor:pointer">备用：手动填写 userId / token</summary>
               <div style="margin-top:10px">
                 <div class="field">
                   <label>userId（数字 ID）</label>
@@ -280,63 +341,36 @@
               </div>
               <div class="field" style="flex:1">
                 <label>H265 原画编码</label>
-                <label class="switch">
-                  <input type="checkbox" id="h265">
-                  <span class="track"></span>
-                </label>
+                <label class="switch"><input type="checkbox" id="h265"><span class="track"></span></label>
               </div>
             </div>
             <div class="row">
               <button class="btn primary" onclick="saveSettings()">保存并刷新</button>
-              <button class="btn danger" onclick="logout()">退出登录</button>
+              <button class="btn danger" onclick="miguLogout()">退出登录</button>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 分享管理 -->
-    <div class="card">
-      <h2><span class="ic">⇪</span> 分享链接管理</h2>
-      <div id="adminGate" class="hidden">
-        <div class="field">
-          <label>管理密码</label>
-          <input type="password" id="adminPwdInput" placeholder="输入管理密码">
-        </div>
-        <button class="btn primary" onclick="adminLogin()">进入管理</button>
-        <p class="muted" style="margin-top:10px">密码在部署时通过环境变量 <b>MIGU_ADMIN_PASSWORD</b> 设置，默认 admin，请尽快修改。</p>
-      </div>
-      <div id="adminPanel" class="hidden">
-        <div class="row">
-          <div class="field" style="flex:1.4">
-            <label>备注（如朋友名字）</label>
-            <input type="text" id="shareNote" placeholder="例如：张三">
-          </div>
-          <div class="field" style="flex:1">
-            <label>有效期</label>
-            <select id="shareDays">
-              <option value="7">7 天</option>
-              <option value="30">30 天</option>
-              <option value="365">一年</option>
-              <option value="0">永久</option>
-            </select>
-          </div>
-          <div class="field" style="flex:1">
-            <label>&nbsp;</label>
-            <button class="btn primary" style="width:100%" onclick="createShare()">生成分享链接</button>
-          </div>
-        </div>
-        <div id="shareList" class="muted">加载中…</div>
-        <div class="row" style="margin-top:8px;margin-bottom:0">
-          <button class="btn small" onclick="adminLogout()">退出管理</button>
-          <span class="muted">分享链接到期后自动失效，也可随时吊销</span>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- 分享链接管理（表格） -->
+  <div class="card">
+    <h2><span class="ic">⇪</span> 分享链接管理</h2>
+    <div class="toolbar">
+      <span class="muted">生成带有效期的专属订阅链接，到期自动失效，可随时吊销</span>
+      <button class="btn primary" onclick="openShareModal()">＋ 新增分享</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>备注</th><th>有效期</th><th>分享链接</th><th>状态</th><th>操作</th></tr></thead>
+        <tbody id="shareTbody"><tr><td colspan="5" class="muted" style="text-align:center">加载中…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- 频道列表 -->
-  <div class="card full">
+  <div class="card">
     <h2><span class="ic">≡</span> 频道列表</h2>
     <input type="text" class="search" id="search" placeholder="搜索频道名称或分组…" oninput="renderChannels()">
     <div class="table-wrap">
@@ -347,6 +381,70 @@
     </div>
   </div>
 </div>
+
+<!-- 扫码风险提示弹窗 -->
+<div class="overlay" id="qrWarnModal">
+  <div class="modal">
+    <h3>⚠️ 扫码登录风险提示</h3>
+    <div class="warn-box warn">
+      1. 扫码登录功能<b>尚未完善</b>，可能无法正常完成登录；<br>
+      2. 使用咪咕账号由服务器批量拉流<b>存在封号风险</b>；<br>
+      3. 建议继续使用免登录模式（720P 高清）。
+    </div>
+    <div class="actions">
+      <button class="btn" onclick="closeOverlay('qrWarnModal')">取消</button>
+      <button class="btn primary" onclick="closeOverlay('qrWarnModal'); startQr()">我已知晓，继续</button>
+    </div>
+  </div>
+</div>
+
+<!-- 新增分享弹窗 -->
+<div class="overlay" id="shareModal">
+  <div class="modal">
+    <h3>新增分享链接</h3>
+    <div class="field">
+      <label>备注（如朋友名字）</label>
+      <input type="text" id="shareNote" placeholder="例如：张三">
+    </div>
+    <div class="field">
+      <label>有效期</label>
+      <select id="shareDays">
+        <option value="7">7 天</option>
+        <option value="30">30 天</option>
+        <option value="365">一年</option>
+        <option value="0">永久</option>
+      </select>
+    </div>
+    <div class="actions">
+      <button class="btn" onclick="closeOverlay('shareModal')">取消</button>
+      <button class="btn primary" onclick="createShare()">生成</button>
+    </div>
+  </div>
+</div>
+
+<!-- 设置弹窗 -->
+<div class="overlay" id="settingsModal">
+  <div class="modal">
+    <h3>系统设置</h3>
+    <div class="field">
+      <label>系统名称（显示在面板顶部）</label>
+      <input type="text" id="setTitle" placeholder="例如：我的直播系统">
+    </div>
+    <div class="field">
+      <label>登录页壁纸（自动模糊 + 暗色蒙版）</label>
+      <input type="file" id="wallpaperFile" accept="image/*" style="padding:8px">
+    </div>
+    <div class="row">
+      <button class="btn" onclick="uploadWallpaper()">上传壁纸</button>
+      <button class="btn danger" onclick="removeWallpaper()">移除壁纸</button>
+    </div>
+    <div class="actions">
+      <button class="btn" onclick="closeOverlay('settingsModal')">关闭</button>
+      <button class="btn primary" onclick="savePanelTitle()">保存</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -355,6 +453,8 @@ const origin = location.origin;
 let qrTimer = null;
 let streams = [];
 let adminPwd = localStorage.getItem("migu_admin_pwd") || "";
+let panelCfg = { title: "migu-m3u 管理面板", require_token: true };
+let shareToken = "";
 
 function toast(msg, err) {
   const t = $("toast");
@@ -365,23 +465,72 @@ function toast(msg, err) {
 }
 
 async function api(url, opt) {
+  opt = opt || {};
+  opt.headers = Object.assign({}, opt.headers || {}, { "X-Admin-Password": adminPwd });
   const r = await fetch(origin + url, opt);
-  const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(data.detail || data.message || ("请求失败 " + r.status));
-  return data;
-}
-
-function copyText(id) {
-  const txt = $(id).textContent.trim();
-  (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject())
-    .then(() => toast("已复制到剪贴板"))
-    .catch(() => toast("复制失败，请手动复制", true));
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401) {
+    showLogin();
+    throw new Error("管理密码错误，请重新登录");
+  }
+  if (!r.ok) throw new Error(d.detail || d.message || ("请求失败 " + r.status));
+  return d;
 }
 
 function copyStr(txt, label) {
   (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject())
     .then(() => toast(label || "已复制"))
     .catch(() => toast("复制失败，请手动复制", true));
+}
+
+function copyText(id) {
+  copyStr($(id).textContent.trim(), "已复制到剪贴板");
+}
+
+function closeOverlay(id) { $(id).classList.remove("show"); }
+function openOverlay(id) { $(id).classList.add("show"); }
+
+// ---------- 登录 / 登出 ----------
+function showLogin() {
+  $("mainView").classList.add("hidden");
+  $("loginView").classList.remove("hidden");
+  $("loginPwd").value = "";
+  $("loginErr").textContent = "";
+}
+
+async function doLogin() {
+  const pwd = $("loginPwd").value;
+  if (!pwd) { $("loginErr").textContent = "请输入管理密码"; return; }
+  adminPwd = pwd;
+  localStorage.setItem("migu_admin_pwd", pwd);
+  try {
+    const cfg = await api("/api/panel/settings");
+    panelCfg = cfg;
+    enterMain();
+  } catch (e) {
+    adminPwd = "";
+    localStorage.removeItem("migu_admin_pwd");
+    $("loginErr").textContent = e.message;
+  }
+}
+
+function enterMain() {
+  $("loginView").classList.add("hidden");
+  $("mainView").classList.remove("hidden");
+  $("panelTitle").textContent = panelCfg.title || "migu-m3u 管理面板";
+  $("accessNote").classList.toggle("hidden", !panelCfg.require_token);
+  $("urlRedirect").textContent = origin + "/migu.m3u";
+  $("urlDirect").textContent = origin + "/migu_direct.m3u";
+  loadLogin();
+  loadStatus();
+  loadShares();
+}
+
+function panelLogout() {
+  adminPwd = "";
+  localStorage.removeItem("migu_admin_pwd");
+  showLogin();
+  toast("已退出管理系统");
 }
 
 // ---------- 服务状态 ----------
@@ -397,7 +546,7 @@ async function loadStatus() {
       ? "最后刷新：" + new Date(s.last_refresh * 1000).toLocaleTimeString("zh-CN")
       : "最后刷新：尚未完成";
     renderChannels();
-  } catch (e) { toast(e.message, true); }
+  } catch (e) { /* 401 已由 api() 处理 */ }
 }
 
 function renderChannels() {
@@ -409,10 +558,9 @@ function renderChannels() {
     <tr>
       <td>${escapeHtml(s.group || "")}</td>
       <td>${escapeHtml(s.name)}</td>
-      <td>${s.ok
-        ? '<span class="tag yes">可播</span>'
+      <td>${s.ok ? '<span class="tag yes">可播</span>'
         : '<span class="tag no" title="' + escapeHtml(s.error || "") + '">异常</span>'}</td>
-      <td><a style="color:var(--accent);text-decoration:none" href="/play/${s.pID}" target="_blank">▶ 播放</a></td>
+      <td><a style="color:var(--accent);text-decoration:none" href="${shareToken ? '/s/' + shareToken + '/play/' : '/play/'}${s.pID}" target="_blank">▶ 播放</a></td>
     </tr>`).join("");
 }
 
@@ -426,7 +574,7 @@ async function refreshNow() {
     await api("/refresh");
     toast("已开始刷新，稍后自动更新状态");
     setTimeout(loadStatus, 8000);
-  } catch (e) { toast(e.message, true); }
+  } catch (e) {}
 }
 
 // ---------- 咪咕登录 ----------
@@ -434,7 +582,7 @@ async function loadLogin() {
   try {
     const info = await api("/api/login/info");
     renderLogin(info);
-  } catch (e) { toast(e.message, true); }
+  } catch (e) {}
 }
 
 function renderLogin(info) {
@@ -454,6 +602,8 @@ function renderLogin(info) {
   }
 }
 
+function askQrWarn() { openOverlay("qrWarnModal"); }
+
 async function startQr() {
   const btn = $("qrBtn");
   btn.disabled = true;
@@ -468,7 +618,7 @@ async function startQr() {
   } catch (e) {
     toast(e.message, true);
     btn.disabled = false;
-    btn.textContent = "获取二维码";
+    btn.textContent = "扫码登录";
   }
 }
 
@@ -479,11 +629,9 @@ async function pollQr(sessionId) {
       const s = await api("/api/login/qrcode/status?session_id=" + sessionId);
       const st = $("qrState");
       st.classList.remove("hidden");
-      if (s.state === "waiting") {
-        st.textContent = "等待扫码…";
-      } else if (s.state === "confirmed") {
-        st.textContent = "已扫码！请回到手机点击“确认登录”";
-      } else if (s.state === "success") {
+      if (s.state === "waiting") st.textContent = "等待扫码…";
+      else if (s.state === "confirmed") st.textContent = "已扫码！请回到手机点击“确认登录”";
+      else if (s.state === "success") {
         clearInterval(qrTimer);
         st.textContent = "登录成功！正在切换到登录模式…";
         toast("登录成功");
@@ -498,7 +646,6 @@ async function pollQr(sessionId) {
         clearInterval(qrTimer);
         st.textContent = "扫码成功但缺少登录字段：" + JSON.stringify(s.raw || {});
         toast("扫码成功但缺少登录字段，请复制下方内容发给作者", true);
-        console.log("raw:", s.raw);
       } else {
         clearInterval(qrTimer);
         st.textContent = s.message || "扫码状态异常";
@@ -506,7 +653,6 @@ async function pollQr(sessionId) {
       }
     } catch (e) {
       clearInterval(qrTimer);
-      toast(e.message, true);
     }
   }, 2500);
 }
@@ -525,7 +671,7 @@ async function saveManual() {
     await loadLogin();
     await loadStatus();
     refreshNow();
-  } catch (e) { toast(e.message, true); }
+  } catch (e) {}
 }
 
 async function saveSettings() {
@@ -537,10 +683,10 @@ async function saveSettings() {
     });
     toast("设置已保存，正在刷新播放地址…");
     await loadStatus();
-  } catch (e) { toast(e.message, true); }
+  } catch (e) {}
 }
 
-async function logout() {
+async function miguLogout() {
   if (!confirm("确定退出登录？将切换回免登录 720P 模式。")) return;
   try {
     await api("/api/login/logout", { method: "POST" });
@@ -548,88 +694,62 @@ async function logout() {
     await loadLogin();
     await loadStatus();
     refreshNow();
-  } catch (e) { toast(e.message, true); }
+  } catch (e) {}
 }
 
 // ---------- 分享管理 ----------
-async function adminApi(url, opt) {
-  opt = opt || {};
-  opt.headers = Object.assign({}, opt.headers || {}, { "X-Admin-Password": adminPwd });
-  const r = await fetch(origin + url, opt);
-  const d = await r.json().catch(() => ({}));
-  if (r.status === 401) {
-    renderAdminGate();
-    throw new Error(d.detail || "管理密码错误");
-  }
-  if (!r.ok) throw new Error(d.detail || ("请求失败 " + r.status));
-  return d;
-}
-
-function renderAdminGate() {
-  $("adminGate").classList.remove("hidden");
-  $("adminPanel").classList.add("hidden");
-}
-
-async function adminLogin() {
-  const pwd = $("adminPwdInput").value;
-  if (!pwd) { toast("请输入管理密码", true); return; }
-  adminPwd = pwd;
-  localStorage.setItem("migu_admin_pwd", pwd);
-  try {
-    await loadShares();
-  } catch (e) {
-    toast(e.message, true);
-  }
-}
-
-function adminLogout() {
-  adminPwd = "";
-  localStorage.removeItem("migu_admin_pwd");
-  renderAdminGate();
-  toast("已退出管理");
+function openShareModal() {
+  $("shareNote").value = "";
+  $("shareDays").value = "7";
+  openOverlay("shareModal");
 }
 
 async function loadShares() {
-  const d = await adminApi("/api/admin/share/list");
-  $("adminGate").classList.add("hidden");
-  $("adminPanel").classList.remove("hidden");
-  const list = d.tokens || [];
-  if (!list.length) {
-    $("shareList").innerHTML = '<span class="muted">还没有分享链接，先在上方生成一个。</span>';
-    return;
-  }
-  $("shareList").innerHTML = list.map(s => {
-    const link = origin + "/s/" + s.token + "/migu.m3u";
-    const stateTag = s.revoked
-      ? '<span class="tag no">已吊销</span>'
-      : s.permanent
-        ? '<span class="tag yes">永久</span>'
-        : s.days_left > 0
-          ? '<span class="tag warn">剩余 ' + s.days_left + ' 天</span>'
-          : '<span class="tag no">已过期</span>';
-    const actions = s.revoked
-      ? '<button class="btn small danger" onclick="deleteShare(\'' + s.token + '\')">删除</button>'
-      : '<button class="btn small" onclick="copyStr(\'' + link + '\',\'已复制分享链接\')">复制链接</button> ' +
-        '<button class="btn small danger" onclick="revokeShare(\'' + s.token + '\')">吊销</button>';
-    return '<div class="share-item">' +
-      '<div class="info"><b>' + escapeHtml(s.note || "未命名") + '</b> ' + stateTag +
-      '<div>' + link + '</div></div>' +
-      '<div class="row" style="margin:0">' + actions + '</div>' +
-      '</div>';
-  }).join("");
+  try {
+    const d = await api("/api/admin/share/list");
+    const list = d.tokens || [];
+    if (!list.length) {
+      $("shareTbody").innerHTML = '<tr><td colspan="5" class="muted" style="text-align:center">还没有分享链接，点击右上角“新增分享”创建一个。</td></tr>';
+      return;
+    }
+    $("shareTbody").innerHTML = list.map(s => {
+      const link = origin + "/s/" + s.token + "/migu.m3u";
+      const stateTag = s.revoked
+        ? '<span class="tag no">已吊销</span>'
+        : s.permanent
+          ? '<span class="tag yes">永久</span>'
+          : s.days_left > 0
+            ? '<span class="tag warn">剩余 ' + s.days_left + ' 天</span>'
+            : '<span class="tag no">已过期</span>';
+      const ops = s.revoked
+        ? '<button class="btn small danger" onclick="deleteShare(\'' + s.token + '\')">删除</button>'
+        : '<button class="btn small" onclick="copyStr(\'' + link + '\',\'已复制分享链接\')">复制链接</button> ' +
+          '<button class="btn small danger" onclick="revokeShare(\'' + s.token + '\')">吊销</button>';
+      return '<tr>' +
+        '<td>' + escapeHtml(s.note || "未命名") + '</td>' +
+        '<td>' + stateTag + '</td>' +
+        '<td style="word-break:break-all;max-width:380px">' + link + '</td>' +
+        '<td>' + (s.revoked ? '<span class="tag no">已失效</span>' : '<span class="tag yes">生效中</span>') + '</td>' +
+        '<td style="white-space:nowrap">' + ops + '</td>' +
+        '</tr>';
+    }).join("");
+    const usable = list.find(s => !s.revoked && (s.permanent || (s.days_left > 0)));
+    shareToken = usable ? usable.token : "";
+    renderChannels();
+  } catch (e) {}
 }
 
 async function createShare() {
   const note = $("shareNote").value.trim();
   const days = Number($("shareDays").value);
   try {
-    const d = await adminApi("/api/admin/share", {
+    await api("/api/admin/share", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ note: note, days: days }),
     });
     toast("分享链接已生成");
-    $("shareNote").value = "";
+    closeOverlay("shareModal");
     await loadShares();
   } catch (e) { toast(e.message, true); }
 }
@@ -637,7 +757,7 @@ async function createShare() {
 async function revokeShare(token) {
   if (!confirm("确定吊销该分享链接？吊销后立即失效。")) return;
   try {
-    await adminApi("/api/admin/share/revoke", {
+    await api("/api/admin/share/revoke", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token: token }),
@@ -650,7 +770,7 @@ async function revokeShare(token) {
 async function deleteShare(token) {
   if (!confirm("确定删除该分享记录？")) return;
   try {
-    await adminApi("/api/admin/share/delete", {
+    await api("/api/admin/share/delete", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token: token }),
@@ -660,19 +780,62 @@ async function deleteShare(token) {
   } catch (e) { toast(e.message, true); }
 }
 
-// ---------- 初始化 ----------
-$("urlRedirect").textContent = origin + "/migu.m3u";
-$("urlDirect").textContent = origin + "/migu_direct.m3u";
-fetch(origin + "/api/config").then(r => r.json()).then(cfg => {
-  if (cfg.require_token) $("accessNote").classList.remove("hidden");
-}).catch(() => {});
-if (adminPwd) {
-  loadShares().catch(() => {});
-} else {
-  renderAdminGate();
+// ---------- 设置 ----------
+function openSettings() {
+  $("setTitle").value = panelCfg.title || "";
+  $("wallpaperFile").value = "";
+  openOverlay("settingsModal");
 }
-loadLogin();
-loadStatus();
+
+async function savePanelTitle() {
+  const title = $("setTitle").value.trim();
+  try {
+    const d = await api("/api/panel/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: title }),
+    });
+    panelCfg.title = d.title;
+    $("panelTitle").textContent = d.title;
+    toast("系统名称已更新");
+  } catch (e) { toast(e.message, true); }
+}
+
+async function uploadWallpaper() {
+  const f = $("wallpaperFile").files[0];
+  if (!f) { toast("请先选择图片", true); return; }
+  const ext = (f.name.split(".").pop() || "jpg").toLowerCase();
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try {
+      await api("/api/panel/wallpaper", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data_base64: reader.result, ext: ext }),
+      });
+      toast("壁纸已上传，刷新登录页即可看到效果");
+      closeOverlay("settingsModal");
+    } catch (e) { toast(e.message, true); }
+  };
+  reader.readAsDataURL(f);
+}
+
+async function removeWallpaper() {
+  try {
+    await api("/api/panel/wallpaper", { method: "DELETE" });
+    toast("壁纸已移除");
+  } catch (e) { toast(e.message, true); }
+}
+
+// ---------- 初始化 ----------
+if (adminPwd) {
+  api("/api/panel/settings").then(cfg => {
+    panelCfg = cfg;
+    enterMain();
+  }).catch(() => showLogin());
+} else {
+  showLogin();
+}
 </script>
 </body>
 </html>

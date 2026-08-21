@@ -24,6 +24,8 @@ services:
       # - MIGU_EPG_REFRESH_HOURS=6
       # 面板管理密码（分享链接管理用，务必修改默认值）
       - MIGU_ADMIN_PASSWORD=admin
+      # 面板默认标题（登录后可在“设置”里改，改完存 data/panel_settings.json）
+      # - MIGU_TITLE=migu-m3u 管理面板
       # 访问限制：开启后 /migu.m3u、/playback.xml、/play 必须通过分享链接(/s/{token}/...)访问
       # 局域网自用可改为 false
       - MIGU_REQUIRE_TOKEN=true

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import datetime
 import json
 import logging
@@ -12,7 +13,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, PlainTextResponse, RedirectResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, RedirectResponse, Response
 from pydantic import BaseModel
 
 from .login import LoginManager
@@ -60,7 +61,58 @@ SETTINGS = {
     "admin_password": os.getenv("MIGU_ADMIN_PASSWORD", "admin"),
     "require_token": env_bool("MIGU_REQUIRE_TOKEN", True),
     "allow_direct": env_bool("MIGU_ALLOW_DIRECT", True),
+    "panel_settings_file": os.getenv("MIGU_PANEL_SETTINGS_FILE", "/data/panel_settings.json"),
+    "wallpaper_file": os.getenv("MIGU_WALLPAPER_FILE", "/data/wallpaper"),
+    "title": os.getenv("MIGU_TITLE", "migu-m3u 管理面板"),
 }
+
+
+class PanelSettings:
+    def __init__(self, file: str, wallpaper_file: str) -> None:
+        self.file = file
+        self.wallpaper_file = wallpaper_file
+        self.title = SETTINGS["title"]
+        self.wallpaper_ext = ""
+        self._load()
+
+    def _load(self) -> None:
+        try:
+            p = Path(self.file)
+            if p.exists():
+                d = json.loads(p.read_text(encoding="utf-8"))
+                self.title = str(d.get("title") or self.title)
+                self.wallpaper_ext = str(d.get("wallpaper_ext") or "")
+        except Exception as e:
+            log.warning("读取面板设置失败: %s", e)
+
+    def _save(self) -> None:
+        try:
+            Path(self.file).parent.mkdir(parents=True, exist_ok=True)
+            Path(self.file).write_text(
+                json.dumps({"title": self.title, "wallpaper_ext": self.wallpaper_ext}, ensure_ascii=False),
+                encoding="utf-8",
+            )
+        except Exception as e:
+            log.warning("保存面板设置失败: %s", e)
+
+    def set_title(self, title: str) -> None:
+        self.title = (title or "").strip() or "migu-m3u 管理面板"
+        self._save()
+
+    def set_wallpaper(self, data: bytes, ext: str) -> None:
+        Path(self.wallpaper_file).parent.mkdir(parents=True, exist_ok=True)
+        Path(self.wallpaper_file).write_bytes(data)
+        self.wallpaper_ext = (ext or "jpg").lower().lstrip(".")
+        self._save()
+
+    def remove_wallpaper(self) -> None:
+        Path(self.wallpaper_file).unlink(missing_ok=True)
+        self.wallpaper_ext = ""
+        self._save()
+
+    def wallpaper_path(self) -> Path | None:
+        p = Path(self.wallpaper_file)
+        return p if p.exists() else None
 
 
 class ServiceState:
@@ -68,6 +120,7 @@ class ServiceState:
         self.migu = MiguClient()
         self.login = LoginManager(SETTINGS["login_file"])
         self.share = ShareManager(SETTINGS["tokens_file"])
+        self.panel = PanelSettings(SETTINGS["panel_settings_file"], SETTINGS["wallpaper_file"])
         self.channels: list[ChannelState] = []
         self.lock = asyncio.Lock()
         self.last_refresh: float = 0.0
@@ -402,15 +455,18 @@ async def health():
 
 
 @app.get("/api/config")
-async def config():
+async def config(request: Request):
+    require_admin(request)
     return {
         "require_token": SETTINGS["require_token"],
         "allow_direct": SETTINGS["allow_direct"],
+        "title": state.panel.title,
     }
 
 
 @app.get("/status")
-async def status():
+async def status(request: Request):
+    require_admin(request)
     now = time.time()
     resolved = [c for c in state.channels if c.url]
     login = state.login.info()
@@ -502,7 +558,8 @@ async def ensure_ready() -> None:
 
 
 @app.get("/refresh")
-async def refresh():
+async def refresh(request: Request):
+    require_admin(request)
     asyncio.create_task(state.refresh_urls())
     asyncio.create_task(state.refresh_epg())
     return {"status": "refreshing"}
@@ -593,7 +650,8 @@ async def admin_share_delete(payload: ShareRevokePayload, request: Request):
 
 # ---------- 扫码登录 ----------
 @app.post("/api/login/qrcode")
-async def login_qrcode():
+async def login_qrcode(request: Request):
+    require_admin(request)
     try:
         info = await state.login.create_qrcode()
         return {"ok": True, **info}
@@ -602,17 +660,20 @@ async def login_qrcode():
 
 
 @app.get("/api/login/qrcode/status")
-async def login_qrcode_status(session_id: str):
+async def login_qrcode_status(session_id: str, request: Request):
+    require_admin(request)
     return await state.login.check_status(session_id)
 
 
 @app.get("/api/login/info")
-async def login_info():
+async def login_info(request: Request):
+    require_admin(request)
     return state.login.info()
 
 
 @app.post("/api/login/logout")
-async def login_logout():
+async def login_logout(request: Request):
+    require_admin(request)
     state.login.logout()
     asyncio.create_task(state.refresh_urls())
     return {"ok": True}
@@ -629,7 +690,8 @@ class ManualLoginPayload(BaseModel):
 
 
 @app.post("/api/login/manual")
-async def login_manual(payload: ManualLoginPayload):
+async def login_manual(payload: ManualLoginPayload, request: Request):
+    require_admin(request)
     if not payload.user_id.strip() or not payload.user_token.strip():
         raise HTTPException(400, "userId 与 userToken 不能为空")
     state.login.set_manual(payload.user_id, payload.user_token)
@@ -638,7 +700,8 @@ async def login_manual(payload: ManualLoginPayload):
 
 
 @app.post("/api/settings")
-async def save_settings(payload: SettingsPayload):
+async def save_settings(payload: SettingsPayload, request: Request):
+    require_admin(request)
     if not state.login.is_logged_in():
         raise HTTPException(400, "请先扫码登录")
     if payload.rate_type in (3, 4, 7, 9):
@@ -648,3 +711,66 @@ async def save_settings(payload: SettingsPayload):
     state.login.save()
     asyncio.create_task(state.refresh_urls())
     return {"ok": True, **state.login.info()}
+
+
+# ---------- 面板设置（标题 / 壁纸） ----------
+@app.get("/api/panel/settings")
+async def panel_settings(request: Request):
+    require_admin(request)
+    return {
+        "title": state.panel.title,
+        "has_wallpaper": state.panel.wallpaper_path() is not None,
+        "require_token": SETTINGS["require_token"],
+        "allow_direct": SETTINGS["allow_direct"],
+    }
+
+
+class PanelTitlePayload(BaseModel):
+    title: str = ""
+
+
+@app.post("/api/panel/settings")
+async def panel_settings_save(payload: PanelTitlePayload, request: Request):
+    require_admin(request)
+    state.panel.set_title(payload.title)
+    return {"ok": True, "title": state.panel.title}
+
+
+class WallpaperPayload(BaseModel):
+    data_base64: str
+    ext: str = "jpg"
+
+
+@app.post("/api/panel/wallpaper")
+async def panel_wallpaper(payload: WallpaperPayload, request: Request):
+    require_admin(request)
+    try:
+        data = base64.b64decode(payload.data_base64.split(",", 1)[-1])
+    except Exception as e:
+        raise HTTPException(400, f"图片数据解析失败: {e}")
+    if not data:
+        raise HTTPException(400, "图片内容为空")
+    state.panel.set_wallpaper(data, payload.ext)
+    return {"ok": True}
+
+
+@app.delete("/api/panel/wallpaper")
+async def panel_wallpaper_remove(request: Request):
+    require_admin(request)
+    state.panel.remove_wallpaper()
+    return {"ok": True}
+
+
+@app.get("/wallpaper")
+async def wallpaper():
+    p = state.panel.wallpaper_path()
+    if not p:
+        raise HTTPException(404, "未设置壁纸")
+    media = {
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "png": "image/png",
+        "webp": "image/webp",
+        "gif": "image/gif",
+    }.get(state.panel.wallpaper_ext, "application/octet-stream")
+    return FileResponse(p, media_type=media)
